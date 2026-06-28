@@ -1,10 +1,143 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Catalog · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-$END$
+<section id="appView">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <nav class="nav">
+            <a th:href="@{/catalog}" class="active">📖 Book catalog</a>
+            <a th:href="@{/borrowings}">📋 My borrowed books</a>
+            <a th:href="@{/catalog}">⭐ My reviews</a>
+            <a th:href="@{/catalog}">👤 My profile</a>
+        </nav>
+        <div class="user-chip">
+            <div class="user-row">
+                <div class="avatar"
+                     th:text="${user != null ? #strings.toUpperCase(#strings.substring(user.username, 0, 2)) : 'U'}">
+                    MM
+                </div>
+                <div class="user-meta">
+                    <strong th:text="${user != null ? user.username : 'Guest'}">User</strong>
+                    <small th:text="${user != null ? user.role.name() + ' account' : ''}">Reader account</small>
+                </div>
+                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="top-actions">
+                <div class="page-title">
+                    <h1>Book catalog</h1>
+                    <p>Search and filter the complete collection.</p>
+                </div>
+            </div>
+            <div class="top-actions">
+                <a th:href="@{/borrowings}" class="btn">My borrowings</a>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:var(--brand-2); color:var(--brand); border-color:var(--brand);"
+             th:text="${success}"></div>
+        <div th:if="${error}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
+             th:text="${error}"></div>
+        <div th:if="${warning}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#fff0d6; color:var(--warning);"
+             th:text="${warning}"></div>
+
+        <!-- Search & filters -->
+        <form method="get" th:action="@{/catalog}" class="search-row">
+            <div class="search-box">
+                <span>⌕</span>
+                <input name="query" placeholder="Search title, author or ISBN…"
+                       th:value="${query}">
+            </div>
+            <select name="genreId" onchange="this.form.submit()" aria-label="Filter by genre">
+                <option value="">All genres</option>
+                <option th:each="genre : ${genres}"
+                        th:value="${genre.genreId}"
+                        th:text="${genre.name}"
+                        th:selected="${genre.genreId == selectedGenreId}">Genre
+                </option>
+            </select>
+            <select name="availability" onchange="this.form.submit()" aria-label="Filter by availability">
+                <option value="">Any availability</option>
+                <option value="available" th:selected="${selectedAvailability == 'available'}">Available now</option>
+            </select>
+            <button type="submit" class="btn">Apply</button>
+        </form>
+
+        <!-- Section header -->
+        <div class="section-head">
+            <div>
+                <h2>Library collection</h2>
+                <p th:text="|${#lists.size(books)} title${#lists.size(books) == 1 ? '' : 's'} found|">titles found</p>
+            </div>
+        </div>
+
+        <!-- Books grid -->
+        <div class="book-grid" th:if="${not #lists.isEmpty(books)}">
+            <article class="panel book-card" th:each="book : ${books}">
+                <div class="cover"
+                     th:style="|--cover: ${ {'#285c46','#e9a23b','#b84843','#3a5566','#8a5a0e','#5c7565'}[book.bookId % 6] }|">
+                    <strong th:text="${book.title}">Title</strong>
+                </div>
+                <div class="book-info">
+                    <h3 th:text="${book.title}">Title</h3>
+                    <p>
+                        <span th:if="${not #lists.isEmpty(book.authors)}"
+                              th:text="${book.authors[0].fullName}">Author</span>
+                        <span th:if="${not #lists.isEmpty(book.genres)}"
+                              th:text="| · ${book.genres[0].name}|">Genre</span>
+                        <span th:text="| · ${book.publicationYear}|">Year</span>
+                    </p>
+                    <div class="book-foot">
+                        <span th:if="${book.availableCopies > 0}" class="status">
+                            <span th:text="${book.availableCopies}">2</span> available
+                        </span>
+                        <span th:if="${book.availableCopies == 0}" class="status out">
+                            Unavailable
+                        </span>
+                        <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small">Details</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <!-- Empty state -->
+        <div th:if="${#lists.isEmpty(books)}" class="panel empty">
+            No books match your filters.
+        </div>
+
+        <!-- Pagination -->
+        <div th:if="${totalPages > 1}"
+             style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
+            <a th:if="${currentPage > 1}"
+               th:href="@{/catalog(page=${currentPage - 1}, query=${query}, genreId=${selectedGenreId})}"
+               class="btn ghost small">← Prev</a>
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                <a th:href="@{/catalog(page=${i}, query=${query}, genreId=${selectedGenreId})}"
+                   th:text="${i}"
+                   th:class="${i == currentPage} ? 'btn small' : 'btn ghost small'">1</a>
+            </span>
+            <a th:if="${currentPage < totalPages}"
+               th:href="@{/catalog(page=${currentPage + 1}, query=${query}, genreId=${selectedGenreId})}"
+               class="btn ghost small">Next →</a>
+        </div>
+    </main>
+</section>
 </body>
 </html>

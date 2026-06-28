@@ -1,10 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="|${book.title} · Library|">Book Details</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-$END$
+<section id="appView">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <nav class="nav">
+            <a th:href="@{/catalog}" class="active">📖 Book catalog</a>
+            <a th:href="@{/borrowings}">📋 My borrowed books</a>
+            <a th:href="@{/catalog}">⭐ My reviews</a>
+            <a th:href="@{/catalog}">👤 My profile</a>
+        </nav>
+        <div class="user-chip">
+            <div class="user-row">
+                <div class="avatar"
+                     th:text="${user != null ? #strings.toUpperCase(#strings.substring(user.username, 0, 2)) : 'U'}">
+                    MM
+                </div>
+                <div class="user-meta">
+                    <strong th:text="${user != null ? user.username : 'Guest'}">User</strong>
+                    <small th:text="${user != null ? user.role.name() + ' account' : ''}">Reader</small>
+                </div>
+                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="top-actions">
+                <a th:href="@{/catalog}" class="btn ghost small">← Back to catalog</a>
+            </div>
+        </header>
+
+        <div th:if="${success}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:var(--brand-2); color:var(--brand);"
+             th:text="${success}"></div>
+        <div th:if="${error}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
+             th:text="${error}"></div>
+
+        <!-- Book details two-column layout -->
+        <div class="split-grid">
+            <div>
+                <div class="panel" style="padding: 0; overflow: hidden;">
+                    <div class="cover"
+                         style="aspect-ratio: 3/4; border-radius: 0; padding: 40px;"
+                         th:style="|--cover: ${ {'#285c46','#e9a23b','#b84843','#3a5566','#8a5a0e','#5c7565'}[book.bookId % 6] }; aspect-ratio: 3/4; border-radius: 0; padding: 40px; display: flex; align-items: flex-end;|">
+                        <strong style="font-size: 26px; line-height: 1.15;" th:text="${book.title}">Title</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span class="eyebrow" style="color: var(--brand);">Book details</span>
+                <h2 style="margin: 8px 0 16px; font-size: 32px;" th:text="${book.title}">Book Title</h2>
+
+                <div class="panel" style="padding: 20px;">
+                    <p style="margin: 0 0 10px;"><strong>Author(s):</strong>
+                        <span th:each="author, iter : ${book.authors}">
+                            <span th:text="${author.fullName}">Author</span><span th:if="${!iter.last}">, </span>
+                        </span>
+                    </p>
+                    <p style="margin: 0 0 10px;"><strong>Genre(s):</strong>
+                        <span th:each="genre, iter : ${book.genres}">
+                            <span th:text="${genre.name}">Genre</span><span th:if="${!iter.last}">, </span>
+                        </span>
+                    </p>
+                    <p style="margin: 0 0 10px;"><strong>Year:</strong>
+                        <span th:text="${book.publicationYear}">2020</span></p>
+                    <p style="margin: 0 0 10px;"><strong>ISBN:</strong>
+                        <span th:text="${book.isbn}">ISBN</span></p>
+                    <p style="margin: 0 0 10px;"><strong>Average rating:</strong>
+                        <span th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</span> ⭐
+                    </p>
+                </div>
+
+                <div style="margin-top: 16px;">
+                    <span th:if="${book.availableCopies > 0}" class="status"
+                          style="font-size: 14px; padding: 8px 16px;">
+                        ✓ <span th:text="${book.availableCopies}">2</span> copies available
+                    </span>
+                    <span th:if="${book.availableCopies == 0}" class="status out"
+                          style="font-size: 14px; padding: 8px 16px;">
+                        ✗ All copies borrowed
+                    </span>
+                </div>
+
+                <form th:if="${book.availableCopies > 0}"
+                      method="post"
+                      th:action="@{/borrowings/request/{id}(id=${book.bookId})}"
+                      style="margin-top: 20px;">
+                    <button type="submit" class="btn" style="padding: 14px 24px;">
+                        📚 Request to borrow
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Reviews section -->
+        <div class="section-head" style="margin-top: 36px;">
+            <div>
+                <h2>Reviews</h2>
+                <p th:text="|${#lists.size(reviews)} review${#lists.size(reviews) == 1 ? '' : 's'}|">reviews</p>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(reviews)}" class="panel empty">
+            No reviews yet. Be the first to review!
+        </div>
+
+        <div th:if="${not #lists.isEmpty(reviews)}" style="display: grid; gap: 12px;">
+            <div class="panel" style="padding: 18px;" th:each="review : ${reviews}">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <strong>User #<span th:text="${review.userId}">1</span></strong>
+                    <span>
+                        <span th:each="i : ${#numbers.sequence(1, review.rating)}">⭐</span>
+                    </span>
+                </div>
+                <p style="margin: 0 0 8px; color: var(--ink);" th:text="${review.comment}">Comment</p>
+                <small style="color: var(--muted);" th:text="${review.createdDate}">date</small>
+            </div>
+        </div>
+    </main>
+</section>
 </body>
 </html>

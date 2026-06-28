@@ -1,10 +1,151 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Borrowings · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-$END$
+<section id="appView">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <nav class="nav">
+            <a th:href="@{/catalog}">📖 Book catalog</a>
+            <a th:href="@{/borrowings}" class="active">📋 My borrowed books</a>
+            <a th:href="@{/catalog}">⭐ My reviews</a>
+            <a th:href="@{/catalog}">👤 My profile</a>
+        </nav>
+        <div class="user-chip">
+            <div class="user-row">
+                <div class="avatar"
+                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">MM
+                </div>
+                <div class="user-meta">
+                    <strong th:text="${user.username}">User</strong>
+                    <small th:text="${user.role.name() + ' account'}">Reader account</small>
+                </div>
+                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="top-actions">
+                <div class="page-title">
+                    <h1>My borrowed books</h1>
+                    <p>Track active loans and due dates.</p>
+                </div>
+            </div>
+            <div class="top-actions">
+                <a th:href="@{/catalog}" class="btn">Browse catalog</a>
+            </div>
+        </header>
+
+        <div th:if="${success}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:var(--brand-2); color:var(--brand);"
+             th:text="${success}"></div>
+        <div th:if="${warning}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#fff0d6; color:var(--warning);"
+             th:text="${warning}"></div>
+        <div th:if="${error}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
+             th:text="${error}"></div>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="panel stat">
+                <span>Currently borrowed</span>
+                <strong th:text="${#lists.size(activeBorrows)}">0</strong>
+                <small>Active loans</small>
+            </div>
+            <div class="panel stat">
+                <span>Total history</span>
+                <strong th:text="${#lists.size(history)}">0</strong>
+                <small>All time records</small>
+            </div>
+        </div>
+
+        <!-- Active borrowings -->
+        <div class="section-head">
+            <div>
+                <h2>Active borrowings</h2>
+                <p>Books currently in your possession.</p>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(activeBorrows)}" class="panel empty">
+            You don't have any active borrowings.
+            <a th:href="@{/catalog}" style="color: var(--brand); font-weight: 700;">Browse the catalog →</a>
+        </div>
+
+        <div th:if="${not #lists.isEmpty(activeBorrows)}" class="panel table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Copy</th>
+                    <th>Borrowed</th>
+                    <th>Due date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="record : ${activeBorrows}">
+                    <td>#<span th:text="${record.copyId}">1</span></td>
+                    <td th:text="${record.borrowDate}">date</td>
+                    <td th:text="${record.dueDate}">date</td>
+                    <td>
+                        <span th:if="${record.status.name() == 'REQUESTED'}" class="status pending">Pending</span>
+                        <span th:if="${record.status.name() == 'APPROVED'}" class="status">Active</span>
+                    </td>
+                    <td>
+                        <form th:if="${record.status.name() == 'APPROVED'}"
+                              method="post"
+                              th:action="@{/borrowings/return/{id}(id=${record.borrowId})}">
+                            <button type="submit" class="btn secondary small">Return</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- History -->
+        <div class="section-head" style="margin-top: 32px;">
+            <div>
+                <h2>Borrowing history</h2>
+                <p>Previously returned books.</p>
+            </div>
+        </div>
+
+        <div th:if="${not #lists.isEmpty(history)}" class="panel table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Copy</th>
+                    <th>Borrowed</th>
+                    <th>Returned</th>
+                    <th>Fine</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="record : ${history}" th:if="${record.returnDate != null}">
+                    <td>#<span th:text="${record.copyId}">1</span></td>
+                    <td th:text="${record.borrowDate}">date</td>
+                    <td th:text="${record.returnDate}">date</td>
+                    <td th:text="|$${record.fineAmount}|">$0</td>
+                    <td><span class="status returned">Returned</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</section>
 </body>
 </html>
