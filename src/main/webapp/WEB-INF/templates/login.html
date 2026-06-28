@@ -1,10 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-$END$
+<section id="loginView">
+    <div class="login-art">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <div class="login-copy">
+            <h1>Your next chapter starts here.</h1>
+            <p>Discover, borrow, review and manage books through one polished digital library experience.</p>
+        </div>
+        <footer></footer>
+    </div>
+    <div class="login-panel">
+        <div class="login-card">
+            <h2>Sign in to Library</h2>
+            <p>Use your role credentials to access your dashboard.</p>
+
+            <div th:if="${param.registered}"
+                 style="padding: 12px; border-radius: 12px; background: var(--brand-2); color: var(--brand); font-size: 13px; font-weight: 600; margin-bottom: 16px;">
+                Registration successful! Please sign in.
+            </div>
+
+            <div th:if="${error}"
+                 style="padding: 12px; border-radius: 12px; background: #f7e2e0; color: var(--danger); font-size: 13px; font-weight: 600; margin-bottom: 16px; border: 1px solid rgba(184, 72, 67, 0.15);"
+                 th:text="${error}">Error
+            </div>
+
+            <form method="post" th:action="@{/login}" class="login-form">
+                <div class="field">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email"
+                           placeholder="reader@library.demo" required>
+                </div>
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password"
+                           placeholder="Enter password" required minlength="6">
+                </div>
+                <button class="btn" type="submit">Sign in →</button>
+            </form>
+
+            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);">
+                <span class="eyebrow"
+                      style="margin-bottom: 12px; display: block; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 1.5px;">
+                    Demo accounts
+                </span>
+                <div style="display: grid; gap: 8px;">
+                    <div class="btn ghost small"
+                         style="justify-content: flex-start; text-align: left; padding: 10px 14px; cursor: default;">
+                        <span style="font-size: 16px;">📖</span>
+                        <div style="display: inline-block; margin-left: 6px;">
+                            <b>Reader</b><br>
+                            <small style="color: var(--muted)">reader@library.demo / reader123</small>
+                        </div>
+                    </div>
+                    <div class="btn ghost small"
+                         style="justify-content: flex-start; text-align: left; padding: 10px 14px; cursor: default;">
+                        <span style="font-size: 16px;">🔑</span>
+                        <div style="display: inline-block; margin-left: 6px;">
+                            <b>Librarian</b><br>
+                            <small style="color: var(--muted)">librarian@library.demo / librarian123</small>
+                        </div>
+                    </div>
+                    <div class="btn ghost small"
+                         style="justify-content: flex-start; text-align: left; padding: 10px 14px; cursor: default;">
+                        <span style="font-size: 16px;">🛡️</span>
+                        <div style="display: inline-block; margin-left: 6px;">
+                            <b>Administrator</b><br>
+                            <small style="color: var(--muted)">admin@library.demo / admin123</small>
+                        </div>
+                    </div>
+                </div>
+                <p style="margin-top: 16px; text-align: center; color: var(--muted); font-size: 13px;">
+                    No account? <a th:href="@{/register}"
+                                   style="color: var(--brand); font-weight: 700; text-decoration: none;">Register</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
 </body>
 </html>

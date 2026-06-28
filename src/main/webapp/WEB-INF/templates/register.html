@@ -1,10 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Register · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-$END$
+<section id="loginView">
+    <div class="login-art">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <div class="login-copy">
+            <h1>Join our community of readers.</h1>
+            <p>Create your account, start borrowing books and share your thoughts.</p>
+        </div>
+        <footer></footer>
+    </div>
+    <div class="login-panel">
+        <div class="login-card">
+            <h2>Create your account</h2>
+            <p>Register as a new reader to start borrowing.</p>
+
+            <div th:if="${error}"
+                 style="padding: 12px; border-radius: 12px; background: #f7e2e0; color: var(--danger); font-size: 13px; font-weight: 600; margin-bottom: 16px;"
+                 th:text="${error}">Error
+            </div>
+
+            <form method="post" th:action="@{/register}" class="login-form">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input id="username" name="username" type="text"
+                           placeholder="At least 3 characters" required minlength="3">
+                </div>
+                <div class="field">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email"
+                           placeholder="you@example.com" required>
+                </div>
+                <div class="field">
+                    <label for="phoneNumber">Phone number (optional)</label>
+                    <input id="phoneNumber" name="phoneNumber" type="tel"
+                           placeholder="+7 700 123 45 67">
+                </div>
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password"
+                           placeholder="At least 6 characters" required minlength="6">
+                </div>
+                <button class="btn" type="submit">Create account →</button>
+            </form>
+
+            <p style="margin-top: 20px; text-align: center; color: var(--muted); font-size: 13px;">
+                Already have an account?
+                <a th:href="@{/login}"
+                   style="color: var(--brand); font-weight: 700; text-decoration: none;">Sign in</a>
+            </p>
+        </div>
+    </div>
+</section>
 </body>
 </html>
