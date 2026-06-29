@@ -9,6 +9,8 @@ import com.library.model.User;
 import com.library.util.ConfigLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -23,6 +25,7 @@ import java.util.Optional;
  * Handles the borrow lifecycle: request → approve → return.
  * Enforces business rules: max borrowing limit, due date calculation, fines.
  */
+@Service
 public class BorrowService {
 
     private static final Logger logger = LogManager.getLogger(BorrowService.class);
@@ -32,13 +35,7 @@ public class BorrowService {
     private final UserDAO userDAO;
     private final ConfigLoader config;
 
-    public BorrowService() {
-        this.borrowDAO = new BorrowRecordDAO();
-        this.copyDAO = new BookCopyDAO();
-        this.userDAO = new UserDAO();
-        this.config = ConfigLoader.getInstance();
-    }
-
+    @Autowired
     public BorrowService(BorrowRecordDAO borrowDAO, BookCopyDAO copyDAO,
                          UserDAO userDAO, ConfigLoader config) {
         this.borrowDAO = borrowDAO;

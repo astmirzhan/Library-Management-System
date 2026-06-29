@@ -6,6 +6,8 @@ import com.library.model.BorrowRecord;
 import com.library.model.Review;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -17,6 +19,7 @@ import java.util.Optional;
  * Handles rating, commenting, and review management.
  * Business rule: users can only review books they have actually borrowed.
  */
+@Service
 public class ReviewService {
 
     private static final Logger logger = LogManager.getLogger(ReviewService.class);
@@ -24,11 +27,7 @@ public class ReviewService {
     private final ReviewDAO reviewDAO;
     private final BorrowRecordDAO borrowDAO;
 
-    public ReviewService() {
-        this.reviewDAO = new ReviewDAO();
-        this.borrowDAO = new BorrowRecordDAO();
-    }
-
+    @Autowired
     public ReviewService(ReviewDAO reviewDAO, BorrowRecordDAO borrowDAO) {
         this.reviewDAO = reviewDAO;
         this.borrowDAO = borrowDAO;

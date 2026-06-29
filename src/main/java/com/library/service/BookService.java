@@ -8,6 +8,8 @@ import com.library.model.Book;
 import com.library.model.Genre;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.Optional;
  * Service layer for book-related business logic.
  * Provides catalog browsing, search, and book management.
  */
+@Service
 public class BookService {
 
     private static final Logger logger = LogManager.getLogger(BookService.class);
@@ -24,12 +27,7 @@ public class BookService {
     private final AuthorDAO authorDAO;
     private final GenreDAO genreDAO;
 
-    public BookService() {
-        this.bookDAO = new BookDAO();
-        this.authorDAO = new AuthorDAO();
-        this.genreDAO = new GenreDAO();
-    }
-
+    @Autowired
     public BookService(BookDAO bookDAO, AuthorDAO authorDAO, GenreDAO genreDAO) {
         this.bookDAO = bookDAO;
         this.authorDAO = authorDAO;

@@ -5,6 +5,8 @@ import com.library.model.User;
 import com.library.util.PasswordUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -15,15 +17,13 @@ import java.util.Optional;
  * Service layer for user-related business logic.
  * Handles authentication, registration, and user management.
  */
+@Service
 public class UserService {
 
     private static final Logger logger = LogManager.getLogger(UserService.class);
     private final UserDAO userDAO;
 
-    public UserService() {
-        this.userDAO = new UserDAO();
-    }
-
+    @Autowired
     public UserService(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
