@@ -208,14 +208,37 @@
                 </configuration>
             </plugin>
 
-            <!-- Tomcat для запуска приложения через mvn tomcat7:run -->
+            <!-- Cargo + Tomcat 9 (Servlet 3.1+) для запуска через mvn cargo:run.
+                 Tomcat 7 не подходит: Spring 5 при отдаче статики вызывает
+                 HttpServletResponse.setContentLengthLong() (Servlet 3.1+),
+                 которого нет в Tomcat 7 (Servlet 3.0). Cargo сам скачает Tomcat 9. -->
             <plugin>
-                <groupId>org.apache.tomcat.maven</groupId>
-                <artifactId>tomcat7-maven-plugin</artifactId>
-                <version>2.2</version>
+                <groupId>org.codehaus.cargo</groupId>
+                <artifactId>cargo-maven3-plugin</artifactId>
+                <version>1.10.13</version>
                 <configuration>
-                    <port>8080</port>
-                    <path>/</path>
+                    <container>
+                        <containerId>tomcat9x</containerId>
+                        <type>installed</type>
+                        <zipUrlInstaller>
+                            <url>https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.85/bin/apache-tomcat-9.0.85.zip</url>
+                        </zipUrlInstaller>
+                    </container>
+                    <configuration>
+                        <properties>
+                            <cargo.servlet.port>8080</cargo.servlet.port>
+                        </properties>
+                    </configuration>
+                    <deployables>
+                        <deployable>
+                            <groupId>com.library</groupId>
+                            <artifactId>library-management</artifactId>
+                            <type>war</type>
+                            <properties>
+                                <context>/</context>
+                            </properties>
+                        </deployable>
+                    </deployables>
                 </configuration>
             </plugin>
         </plugins>
