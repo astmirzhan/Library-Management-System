@@ -6,6 +6,7 @@ import com.library.model.Book;
 import com.library.model.Genre;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * Data Access Object for the BOOK table.
  * Provides CRUD operations, search, filtering and pagination for books.
  */
+@Repository
 public class BookDAO implements BaseDAO<Book, Integer> {
 
     private static final Logger logger = LogManager.getLogger(BookDAO.class);

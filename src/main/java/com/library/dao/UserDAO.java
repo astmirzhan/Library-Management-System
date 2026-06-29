@@ -4,6 +4,7 @@ import com.library.config.DatabaseConnection;
 import com.library.model.User;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.UUID;
  * Data Access Object for the USER table.
  * Provides CRUD operations and queries specific to users.
  */
+@Repository
 public class UserDAO implements BaseDAO<User, Integer> {
 
     private static final Logger logger = LogManager.getLogger(UserDAO.class);

@@ -4,6 +4,7 @@ import com.library.config.DatabaseConnection;
 import com.library.model.Publisher;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.UUID;
  * Data Access Object for the PUBLISHER table.
  * Provides CRUD operations for publishers.
  */
+@Repository
 public class PublisherDAO implements BaseDAO<Publisher, Integer> {
 
     private static final Logger logger = LogManager.getLogger(PublisherDAO.class);

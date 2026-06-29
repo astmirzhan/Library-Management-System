@@ -4,6 +4,7 @@ import com.library.config.DatabaseConnection;
 import com.library.model.Genre;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.Optional;
  * Data Access Object for the GENRE table.
  * Provides CRUD operations for genres.
  */
+@Repository
 public class GenreDAO implements BaseDAO<Genre, Integer> {
 
     private static final Logger logger = LogManager.getLogger(GenreDAO.class);

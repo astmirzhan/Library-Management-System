@@ -4,6 +4,7 @@ import com.library.config.DatabaseConnection;
 import com.library.model.BorrowRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -16,6 +17,7 @@ import java.util.Optional;
  * Data Access Object for the BORROW_RECORD table.
  * Manages the borrowing lifecycle: request, approval, return.
  */
+@Repository
 public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
 
     private static final Logger logger = LogManager.getLogger(BorrowRecordDAO.class);

@@ -4,6 +4,7 @@ import com.library.config.DatabaseConnection;
 import com.library.model.Review;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -15,6 +16,7 @@ import java.util.Optional;
  * Data Access Object for the REVIEW table.
  * Provides CRUD operations for book reviews.
  */
+@Repository
 public class ReviewDAO implements BaseDAO<Review, Integer> {
 
     private static final Logger logger = LogManager.getLogger(ReviewDAO.class);

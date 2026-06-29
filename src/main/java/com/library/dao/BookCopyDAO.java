@@ -4,6 +4,7 @@ import com.library.config.DatabaseConnection;
 import com.library.model.BookCopy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -15,6 +16,7 @@ import java.util.Optional;
  * Data Access Object for the BOOK_COPY table.
  * Provides CRUD operations for physical book copies.
  */
+@Repository
 public class BookCopyDAO implements BaseDAO<BookCopy, Integer> {
 
     private static final Logger logger = LogManager.getLogger(BookCopyDAO.class);
