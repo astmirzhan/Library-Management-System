@@ -134,6 +134,10 @@ public class BorrowService {
         if (record.getReturnDate() != null) {
             throw new IllegalStateException("Book already returned");
         }
+        if (record.getStatus() != BorrowRecord.Status.APPROVED) {
+            throw new IllegalStateException(
+                    "Only an approved (borrowed) book can be returned");
+        }
 
         BigDecimal fine = calculateFine(record.getDueDate(), LocalDate.now());
         borrowDAO.returnBook(borrowId, fine);

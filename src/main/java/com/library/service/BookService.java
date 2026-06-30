@@ -168,6 +168,30 @@ public class BookService {
     }
 
     /**
+     * Returns the count of books matching the same filter the catalog applied,
+     * so pagination reflects the filtered result set (not the whole catalog).
+     *
+     * @param query        search query (title/ISBN), or null/blank
+     * @param genreId      genre filter, or null
+     * @param availability "available" to restrict to in-stock books, else null
+     * @return matching book count
+     * @throws SQLException if database error occurs
+     */
+    public int getFilteredBookCount(String query, Integer genreId, String availability)
+            throws SQLException {
+        if (query != null && !query.trim().isEmpty()) {
+            return bookDAO.countSearch(query.trim());
+        }
+        if (genreId != null) {
+            return bookDAO.countByGenre(genreId);
+        }
+        if ("available".equalsIgnoreCase(availability)) {
+            return bookDAO.countAvailable();
+        }
+        return bookDAO.count();
+    }
+
+    /**
      * Returns all authors (for filters).
      *
      * @return list of all authors

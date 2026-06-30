@@ -2,7 +2,6 @@ package com.library.service;
 
 import com.library.dao.BorrowRecordDAO;
 import com.library.dao.ReviewDAO;
-import com.library.model.BorrowRecord;
 import com.library.model.Review;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,10 +75,7 @@ public class ReviewService {
      * @throws SQLException if database error occurs
      */
     private boolean hasUserBorrowedBook(int userId, int bookId) throws SQLException {
-        List<BorrowRecord> userBorrows = borrowDAO.findByUserId(userId);
-        return userBorrows.stream()
-                .anyMatch(record -> record.getBookCopy() != null
-                        && record.getBookCopy().getBookId() == bookId);
+        return borrowDAO.hasUserBorrowedBook(userId, bookId);
     }
 
     /**

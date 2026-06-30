@@ -388,6 +388,75 @@ public class BookDAO implements BaseDAO<Book, Integer> {
         return 0;
     }
 
+    /**
+     * Counts books matching a search query (title or ISBN). For pagination of search results.
+     */
+    public int countSearch(String query) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM book WHERE LOWER(title) LIKE LOWER(?) OR isbn LIKE ?";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            String searchPattern = "%" + query + "%";
+            stmt.setString(1, searchPattern);
+            stmt.setString(2, searchPattern);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count search results for query: {}", query, e);
+            throw e;
+        }
+        return 0;
+    }
+
+    /**
+     * Counts books in a given genre. For pagination of genre-filtered results.
+     */
+    public int countByGenre(int genreId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM book b " +
+                "JOIN book_genre bg ON b.book_id = bg.book_id WHERE bg.genre_id = ?";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, genreId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count books by genre: {}", genreId, e);
+            throw e;
+        }
+        return 0;
+    }
+
+    /**
+     * Counts available books (available_copies > 0). For pagination of the availability filter.
+     */
+    public int countAvailable() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM book WHERE available_copies > 0";
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count available books", e);
+            throw e;
+        }
+        return 0;
+    }
+
     private Book mapResultSet(ResultSet rs) throws SQLException {
         Book book = new Book();
         book.setBookId(rs.getInt("book_id"));

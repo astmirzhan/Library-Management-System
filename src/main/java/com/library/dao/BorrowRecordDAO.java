@@ -31,7 +31,7 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
     public BorrowRecord save(BorrowRecord record) throws SQLException {
         String sql = "INSERT INTO borrow_record (user_id, copy_id, borrow_date, due_date, " +
                 "return_date, status, fine_amount, fine_paid, approved_by, approval_date) " +
-                "VALUES (?, ?, ?, ?, ?, ?::status_enum, ?, ?, ?, ?) RETURNING borrow_id";
+                "VALUES (?, ?, ?, ?, ?, ?::borrow_status, ?, ?, ?, ?) RETURNING borrow_id";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -160,6 +160,35 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
             throw e;
         }
         return records;
+    }
+
+    /**
+     * Checks whether a user has ever borrowed any copy of a given book.
+     * Joins borrow_record to book_copy to resolve copy -> book.
+     *
+     * @param userId the user ID
+     * @param bookId the book ID
+     * @return true if the user has a borrow record for a copy of the book
+     * @throws SQLException if database error occurs
+     */
+    public boolean hasUserBorrowedBook(int userId, int bookId) throws SQLException {
+        String sql = "SELECT 1 FROM borrow_record br " +
+                "JOIN book_copy bc ON bc.copy_id = br.copy_id " +
+                "WHERE br.user_id = ? AND bc.book_id = ? LIMIT 1";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to check borrow history for user {} book {}", userId, bookId, e);
+            throw e;
+        }
     }
 
     /**
@@ -327,7 +356,7 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
 
     @Override
     public boolean update(BorrowRecord record) throws SQLException {
-        String sql = "UPDATE borrow_record SET due_date = ?, return_date = ?, status = ?::status_enum, " +
+        String sql = "UPDATE borrow_record SET due_date = ?, return_date = ?, status = ?::borrow_status, " +
                 "fine_amount = ?, fine_paid = ? WHERE borrow_id = ?";
 
         try (Connection conn = dbConnection.getConnection();

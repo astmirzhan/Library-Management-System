@@ -29,7 +29,7 @@ public class BookCopyDAO implements BaseDAO<BookCopy, Integer> {
     @Override
     public BookCopy save(BookCopy copy) throws SQLException {
         String sql = "INSERT INTO book_copy (book_id, copy_number, condition, acquisition_date) " +
-                "VALUES (?, ?, ?::condition_enum, ?) RETURNING copy_id";
+                "VALUES (?, ?, ?::copy_condition, ?) RETURNING copy_id";
 
         if (copy.getAcquisitionDate() == null) {
             copy.setAcquisitionDate(LocalDate.now());
@@ -166,7 +166,7 @@ public class BookCopyDAO implements BaseDAO<BookCopy, Integer> {
 
     @Override
     public boolean update(BookCopy copy) throws SQLException {
-        String sql = "UPDATE book_copy SET condition = ?::condition_enum WHERE copy_id = ?";
+        String sql = "UPDATE book_copy SET condition = ?::copy_condition WHERE copy_id = ?";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -36,8 +36,8 @@ public class UserDAO implements BaseDAO<User, Integer> {
      */
     @Override
     public User save(User user) throws SQLException {
-        String sql = "INSERT INTO \"user\" (user_uuid, username, email, password_hash, " +
-                "role, registration_date, phone_number) VALUES (?, ?, ?, ?, ?::role_enum, ?, ?) " +
+        String sql = "INSERT INTO \"user\" (user_uuid, username, email, password, " +
+                "role, registration_date, phone_number) VALUES (?, ?, ?, ?, ?::user_role, ?, ?) " +
                 "RETURNING user_id";
 
         if (user.getUserUuid() == null) {
@@ -171,7 +171,7 @@ public class UserDAO implements BaseDAO<User, Integer> {
      * @throws SQLException if database error occurs
      */
     public List<User> findByRole(User.Role role) throws SQLException {
-        String sql = "SELECT * FROM \"user\" WHERE role = ?::role_enum ORDER BY username";
+        String sql = "SELECT * FROM \"user\" WHERE role = ?::user_role ORDER BY username";
         List<User> users = new ArrayList<>();
 
         try (Connection conn = dbConnection.getConnection();
@@ -200,8 +200,8 @@ public class UserDAO implements BaseDAO<User, Integer> {
      */
     @Override
     public boolean update(User user) throws SQLException {
-        String sql = "UPDATE \"user\" SET username = ?, email = ?, password_hash = ?, " +
-                "role = ?::role_enum, phone_number = ? WHERE user_id = ?";
+        String sql = "UPDATE \"user\" SET username = ?, email = ?, password = ?, " +
+                "role = ?::user_role, phone_number = ? WHERE user_id = ?";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -283,7 +283,7 @@ public class UserDAO implements BaseDAO<User, Integer> {
         user.setUserUuid(rs.getString("user_uuid"));
         user.setUsername(rs.getString("username"));
         user.setEmail(rs.getString("email"));
-        user.setPasswordHash(rs.getString("password_hash"));
+        user.setPasswordHash(rs.getString("password"));
         user.setRole(User.Role.valueOf(rs.getString("role")));
 
         Date regDate = rs.getDate("registration_date");
