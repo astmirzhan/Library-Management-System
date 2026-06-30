@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
 <section id="loginView">
@@ -38,7 +38,7 @@
                 <div class="field">
                     <label for="email">Email address</label>
                     <input id="email" name="email" type="email"
-                           placeholder="reader@library.demo" required>
+                           placeholder="Enter your email" required>
                 </div>
                 <div class="field">
                     <label for="password">Password</label>
@@ -48,42 +48,11 @@
                 <button class="btn" type="submit">Sign in →</button>
             </form>
 
-            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line);">
-                <span class="eyebrow"
-                      style="margin-bottom: 12px; display: block; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 1.5px;">
-                    Demo accounts
-                </span>
-                <div style="display: grid; gap: 8px;">
-                    <div class="btn ghost small"
-                         style="justify-content: flex-start; text-align: left; padding: 10px 14px; cursor: default;">
-                        <span style="font-size: 16px;">📖</span>
-                        <div style="display: inline-block; margin-left: 6px;">
-                            <b>Reader</b><br>
-                            <small style="color: var(--muted)">reader@library.demo / reader123</small>
-                        </div>
-                    </div>
-                    <div class="btn ghost small"
-                         style="justify-content: flex-start; text-align: left; padding: 10px 14px; cursor: default;">
-                        <span style="font-size: 16px;">🔑</span>
-                        <div style="display: inline-block; margin-left: 6px;">
-                            <b>Librarian</b><br>
-                            <small style="color: var(--muted)">librarian@library.demo / librarian123</small>
-                        </div>
-                    </div>
-                    <div class="btn ghost small"
-                         style="justify-content: flex-start; text-align: left; padding: 10px 14px; cursor: default;">
-                        <span style="font-size: 16px;">🛡️</span>
-                        <div style="display: inline-block; margin-left: 6px;">
-                            <b>Administrator</b><br>
-                            <small style="color: var(--muted)">admin@library.demo / admin123</small>
-                        </div>
-                    </div>
-                </div>
-                <p style="margin-top: 16px; text-align: center; color: var(--muted); font-size: 13px;">
-                    No account? <a th:href="@{/register}"
-                                   style="color: var(--brand); font-weight: 700; text-decoration: none;">Register</a>
-                </p>
-            </div>
+            <p style="margin-top: 20px; text-align: center; color: var(--muted); font-size: 13px;">
+                No account?
+                <a th:href="@{/register}"
+                   style="color: var(--brand); font-weight: 700; text-decoration: none;">Register</a>
+            </p>
         </div>
     </div>
 </section>
