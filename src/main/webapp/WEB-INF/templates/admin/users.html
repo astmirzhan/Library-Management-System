@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Management · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}">
+</head>
+<body>
+<section id="appView">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <nav class="nav">
+            <a th:href="@{/admin/dashboard}">📊 Dashboard</a>
+            <a th:href="@{/admin/users}" class="active">👥 User management</a>
+            <a th:href="@{/librarian/books}">📖 Inventory</a>
+            <a th:href="@{/librarian/borrows}">📋 All borrows</a>
+            <a th:href="@{/catalog}">🔍 View catalog</a>
+        </nav>
+        <div class="user-chip">
+            <div class="user-row">
+                <div class="avatar"
+                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">A
+                </div>
+                <div class="user-meta">
+                    <strong th:text="${user.username}">User</strong>
+                    <small>Admin account</small>
+                </div>
+                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="top-actions">
+                <div class="page-title">
+                    <h1>User management</h1>
+                    <p>View and manage all registered accounts.</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        <div th:if="${success}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:var(--brand-2); color:var(--brand); border-color:var(--brand);"
+             th:text="${success}"></div>
+        <div th:if="${error}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
+             th:text="${error}"></div>
+
+        <div class="section-head">
+            <div>
+                <h2>Registered users</h2>
+                <p th:text="|${#lists.size(users)} account${#lists.size(users) == 1 ? '' : 's'} on this page|">accounts</p>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(users)}" class="panel empty">
+            No users to display.
+        </div>
+
+        <div th:if="${not #lists.isEmpty(users)}" class="panel table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Registered</th>
+                    <th>Phone</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td>#<span th:text="${u.userId}">1</span></td>
+                    <td th:text="${u.username}">name</td>
+                    <td th:text="${u.email}">email</td>
+                    <td><span class="status" th:text="${u.role.name()}">ROLE</span></td>
+                    <td th:text="${u.registrationDate}">date</td>
+                    <td th:text="${u.phoneNumber != null ? u.phoneNumber : '—'}">—</td>
+                    <td>
+                        <span th:if="${u.userId == user.userId}" style="color: var(--muted);">You</span>
+                        <form th:unless="${u.userId == user.userId}" method="post"
+                              th:action="@{/admin/users/delete/{id}(id=${u.userId})}"
+                              style="display:inline">
+                            <button type="submit" class="btn ghost small"
+                                    style="color: var(--danger);">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination (prev/next; controller does not expose total count) -->
+        <div style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
+            <a th:if="${currentPage > 1}"
+               th:href="@{/admin/users(page=${currentPage - 1})}"
+               class="btn ghost small">← Prev</a>
+            <span class="btn small" th:text="${currentPage}">1</span>
+            <a th:if="${#lists.size(users) == 20}"
+               th:href="@{/admin/users(page=${currentPage + 1})}"
+               class="btn ghost small">Next →</a>
+        </div>
+    </main>
+</section>
+</body>
+</html>

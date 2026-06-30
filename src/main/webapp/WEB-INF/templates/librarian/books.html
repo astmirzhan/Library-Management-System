@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Book Inventory · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}">
+</head>
+<body>
+<section id="appView">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <nav class="nav">
+            <a th:href="@{/librarian/dashboard}">📊 Dashboard</a>
+            <a th:href="@{/librarian/books}" class="active">📖 Book inventory</a>
+            <a th:href="@{/librarian/borrows}">📋 Borrowing records</a>
+            <a th:href="@{/catalog}">🔍 View catalog</a>
+        </nav>
+        <div class="user-chip">
+            <div class="user-row">
+                <div class="avatar"
+                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">L
+                </div>
+                <div class="user-meta">
+                    <strong th:text="${user.username}">User</strong>
+                    <small th:text="${user.role.name() + ' account'}">Librarian account</small>
+                </div>
+                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="top-actions">
+                <div class="page-title">
+                    <h1>Book inventory</h1>
+                    <p>All titles currently in the catalog.</p>
+                </div>
+            </div>
+            <div class="top-actions">
+                <a th:href="@{/catalog}" class="btn">View public catalog</a>
+            </div>
+        </header>
+
+        <div th:if="${success}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:var(--brand-2); color:var(--brand); border-color:var(--brand);"
+             th:text="${success}"></div>
+        <div th:if="${error}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
+             th:text="${error}"></div>
+
+        <div class="section-head">
+            <div>
+                <h2>Catalog inventory</h2>
+                <p th:text="|${#lists.size(books)} title${#lists.size(books) == 1 ? '' : 's'} on this page|">titles</p>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(books)}" class="panel empty">
+            No books in the catalog.
+        </div>
+
+        <div th:if="${not #lists.isEmpty(books)}" class="panel table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>ISBN</th>
+                    <th>Year</th>
+                    <th>Total</th>
+                    <th>Available</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="book : ${books}">
+                    <td>#<span th:text="${book.bookId}">1</span></td>
+                    <td th:text="${book.title}">title</td>
+                    <td th:text="${book.isbn}">isbn</td>
+                    <td th:text="${book.publicationYear}">year</td>
+                    <td th:text="${book.totalCopies}">0</td>
+                    <td>
+                        <span th:if="${book.availableCopies > 0}" class="status"
+                              th:text="${book.availableCopies}">0</span>
+                        <span th:if="${book.availableCopies == 0}" class="status out">0</span>
+                    </td>
+                    <td>
+                        <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small">Details</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination (prev/next; controller does not expose total count) -->
+        <div style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
+            <a th:if="${currentPage > 1}"
+               th:href="@{/librarian/books(page=${currentPage - 1})}"
+               class="btn ghost small">← Prev</a>
+            <span class="btn small" th:text="${currentPage}">1</span>
+            <a th:if="${#lists.size(books) == 20}"
+               th:href="@{/librarian/books(page=${currentPage + 1})}"
+               class="btn ghost small">Next →</a>
+        </div>
+    </main>
+</section>
+</body>
+</html>

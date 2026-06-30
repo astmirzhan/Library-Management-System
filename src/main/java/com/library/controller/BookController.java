@@ -63,7 +63,7 @@ public class BookController {
                 books = bookService.getAllBooks(page, PAGE_SIZE);
             }
 
-            int totalBooks = bookService.getBookCount();
+            int totalBooks = bookService.getFilteredBookCount(query, genreId, availability);
             int totalPages = (int) Math.ceil((double) totalBooks / PAGE_SIZE);
 
             List<Genre> genres = bookService.getAllGenres();
