@@ -2,39 +2,48 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!--
-  Role-aware sidebar fragment.
+  Role-aware, localized sidebar fragment.
   Usage: <aside th:replace="~{fragments/sidebar :: sidebar('catalog')}"></aside>
-  The 'active' argument marks the current nav item.
 -->
 <aside class="sidebar" th:fragment="sidebar(active)">
     <div class="brand"><span class="brand-mark">⌁</span> Library</div>
     <nav class="nav">
         <!-- READER -->
         <th:block th:if="${user.role.name() == 'READER'}">
-            <a th:href="@{/discover}" th:classappend="${active == 'discover'} ? 'active'">🏠 Discover</a>
-            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">📖 Book catalog</a>
-            <a th:href="@{/borrowings}" th:classappend="${active == 'borrowings'} ? 'active'">📋 My borrowed books</a>
-            <a th:href="@{/reviews/my}" th:classappend="${active == 'reviews'} ? 'active'">⭐ My reviews</a>
-            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 My profile</a>
+            <a th:href="@{/discover}" th:classappend="${active == 'discover'} ? 'active'">🏠 <span th:text="#{nav.discover}">Discover</span></a>
+            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">📖 <span th:text="#{nav.catalog}">Book catalog</span></a>
+            <a th:href="@{/borrowings}" th:classappend="${active == 'borrowings'} ? 'active'">📋 <span th:text="#{nav.borrowings}">My borrowed books</span></a>
+            <a th:href="@{/reviews/my}" th:classappend="${active == 'reviews'} ? 'active'">⭐ <span th:text="#{nav.reviews}">My reviews</span></a>
+            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 <span th:text="#{nav.profile}">My profile</span></a>
         </th:block>
         <!-- LIBRARIAN -->
         <th:block th:if="${user.role.name() == 'LIBRARIAN'}">
-            <a th:href="@{/librarian/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">📊 Dashboard</a>
-            <a th:href="@{/librarian/books}" th:classappend="${active == 'books'} ? 'active'">📖 Book inventory</a>
-            <a th:href="@{/librarian/borrows}" th:classappend="${active == 'borrows'} ? 'active'">📋 Borrowing records</a>
-            <a th:href="@{/librarian/overdue}" th:classappend="${active == 'overdue'} ? 'active'">⏰ Overdue</a>
-            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">🔍 View catalog</a>
-            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 My profile</a>
+            <a th:href="@{/librarian/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">📊 <span th:text="#{nav.dashboard}">Dashboard</span></a>
+            <a th:href="@{/librarian/books}" th:classappend="${active == 'books'} ? 'active'">📖 <span th:text="#{nav.bookInventory}">Book inventory</span></a>
+            <a th:href="@{/librarian/borrows}" th:classappend="${active == 'borrows'} ? 'active'">📋 <span th:text="#{nav.borrows}">Borrowing records</span></a>
+            <a th:href="@{/librarian/overdue}" th:classappend="${active == 'overdue'} ? 'active'">⏰ <span th:text="#{nav.overdue}">Overdue</span></a>
+            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">🔍 <span th:text="#{nav.viewCatalog}">View catalog</span></a>
+            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 <span th:text="#{nav.profile}">My profile</span></a>
         </th:block>
         <!-- ADMIN -->
         <th:block th:if="${user.role.name() == 'ADMIN'}">
-            <a th:href="@{/admin/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">📊 Dashboard</a>
-            <a th:href="@{/admin/users}" th:classappend="${active == 'users'} ? 'active'">👥 User management</a>
-            <a th:href="@{/librarian/books}" th:classappend="${active == 'books'} ? 'active'">📖 Inventory</a>
-            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">🔍 View catalog</a>
-            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 My profile</a>
+            <a th:href="@{/admin/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">📊 <span th:text="#{nav.dashboard}">Dashboard</span></a>
+            <a th:href="@{/admin/users}" th:classappend="${active == 'users'} ? 'active'">👥 <span th:text="#{nav.users}">User management</span></a>
+            <a th:href="@{/librarian/books}" th:classappend="${active == 'books'} ? 'active'">📖 <span th:text="#{nav.inventory}">Inventory</span></a>
+            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">🔍 <span th:text="#{nav.viewCatalog}">View catalog</span></a>
+            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 <span th:text="#{nav.profile}">My profile</span></a>
         </th:block>
     </nav>
+
+    <!-- Language switcher (relative ?lang= keeps the current page) -->
+    <div style="padding: 8px 13px; display: flex; gap: 8px; align-items: center;">
+        <a href="?lang=en" style="color:#c8dad1; text-decoration:none; font-weight:800;"
+           th:text="#{lang.en}">EN</a>
+        <span style="color:#5c7565;">|</span>
+        <a href="?lang=ru" style="color:#c8dad1; text-decoration:none; font-weight:800;"
+           th:text="#{lang.ru}">RU</a>
+    </div>
+
     <div class="user-chip">
         <div class="user-row">
             <div class="avatar"
@@ -42,7 +51,7 @@
             </div>
             <div class="user-meta">
                 <strong th:text="${user.username}">User</strong>
-                <small th:text="${user.role.name() + ' account'}">account</small>
+                <small><span th:text="${user.role.name()}">READER</span> <span th:text="#{label.account}">account</span></small>
             </div>
             <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
         </div>
