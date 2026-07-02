@@ -18,32 +18,32 @@
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
-                    <h1 th:text="|Welcome back, ${user.username}!|">Welcome back!</h1>
-                    <p>Discover available books to borrow.</p>
+                    <h1 th:text="#{discover.welcome(${user.username})}">Welcome back!</h1>
+                    <p th:text="#{discover.subtitle}">Discover available books to borrow.</p>
                 </div>
             </div>
             <div class="top-actions">
-                <a th:href="@{/catalog}" class="btn">Full catalog</a>
+                <a th:href="@{/catalog}" class="btn" th:text="#{discover.fullCatalog}">Full catalog</a>
             </div>
         </header>
 
         <!-- Banner -->
         <div class="admin-banner panel">
             <div>
-                <h2>Find your next read</h2>
-                <p>Browse the collection, borrow books and share your reviews.</p>
+                <h2 th:text="#{discover.bannerTitle}">Find your next read</h2>
+                <p th:text="#{discover.bannerText}">Browse the collection, borrow books and share your reviews.</p>
             </div>
-            <a th:href="@{/catalog}" class="btn">Explore catalog</a>
+            <a th:href="@{/catalog}" class="btn" th:text="#{discover.explore}">Explore catalog</a>
         </div>
 
         <div class="section-head">
             <div>
-                <h2>Available now</h2>
-                <p>Popular titles ready to borrow.</p>
+                <h2 th:text="#{discover.availableNow}">Available now</h2>
+                <p th:text="#{discover.popular}">Popular titles ready to borrow.</p>
             </div>
         </div>
 
-        <div th:if="${#lists.isEmpty(books)}" class="panel empty">
+        <div th:if="${#lists.isEmpty(books)}" class="panel empty" th:text="#{discover.empty}">
             No books available right now.
         </div>
 
@@ -62,9 +62,9 @@
                     </p>
                     <div class="book-foot">
                         <span class="status">
-                            <span th:text="${book.availableCopies}">2</span> available
+                            <span th:text="${book.availableCopies}">2</span> <span th:text="#{catalog.available}">available</span>
                         </span>
-                        <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small">Details</a>
+                        <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small" th:text="#{common.details}">Details</a>
                     </div>
                 </div>
             </article>

@@ -22,10 +22,13 @@
     </div>
     <div class="login-panel">
         <div class="login-card">
-            <div style="text-align:right; margin-bottom:8px; font-size:13px;">
-                <a href="?lang=en" style="color:var(--brand); font-weight:800; text-decoration:none;" th:text="#{lang.en}">EN</a>
-                <span style="color:var(--muted);">|</span>
-                <a href="?lang=ru" style="color:var(--brand); font-weight:800; text-decoration:none;" th:text="#{lang.ru}">RU</a>
+            <div style="display:flex; gap:6px; justify-content:flex-end; margin-bottom:14px;">
+                <a href="?lang=en" th:text="#{lang.en}"
+                   th:style="|padding:6px 14px; border-radius:9px; text-decoration:none; font-weight:800; font-size:13px;
+                              ${#locale.language == 'en'} ? 'background:var(--brand); color:#fff;' : 'background:var(--brand-2); color:var(--brand);'|">EN</a>
+                <a href="?lang=ru" th:text="#{lang.ru}"
+                   th:style="|padding:6px 14px; border-radius:9px; text-decoration:none; font-weight:800; font-size:13px;
+                              ${#locale.language == 'ru'} ? 'background:var(--brand); color:#fff;' : 'background:var(--brand-2); color:var(--brand);'|">RU</a>
             </div>
             <h2 th:text="#{auth.registerTitle}">Create your account</h2>
             <p th:text="#{auth.registerSubtitle}">Register as a new reader to start borrowing.</p>

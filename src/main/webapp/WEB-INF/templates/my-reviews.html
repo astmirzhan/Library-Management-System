@@ -18,8 +18,8 @@
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
-                    <h1>My reviews</h1>
-                    <p>Ratings and comments you left on books.</p>
+                    <h1 th:text="#{reviews.title}">My reviews</h1>
+                    <p th:text="#{reviews.subtitle}">Ratings and comments you left on books.</p>
                 </div>
             </div>
         </header>
@@ -33,12 +33,12 @@
 
         <div class="section-head">
             <div>
-                <h2>Your reviews</h2>
-                <p th:text="|${#lists.size(reviews)} review${#lists.size(reviews) == 1 ? '' : 's'}|">reviews</p>
+                <h2 th:text="#{reviews.your}">Your reviews</h2>
+                <p th:text="#{reviews.count(${#lists.size(reviews)})}">reviews</p>
             </div>
         </div>
 
-        <div th:if="${#lists.isEmpty(reviews)}" class="panel empty">
+        <div th:if="${#lists.isEmpty(reviews)}" class="panel empty" th:text="#{reviews.empty}">
             You haven't written any reviews yet.
         </div>
 
@@ -65,7 +65,7 @@
                         <option value="1" th:selected="${review.rating == 1}">★ (1)</option>
                     </select>
                     <textarea name="comment" rows="2" required th:text="${review.comment}">Comment</textarea>
-                    <button type="submit" class="btn small" style="justify-self: start;">Save changes</button>
+                    <button type="submit" class="btn small" style="justify-self: start;" th:text="#{common.save}">Save changes</button>
                 </form>
                 <small style="color: var(--muted);" th:text="${review.createdDate}">date</small>
             </div>

@@ -18,12 +18,12 @@
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
-                    <h1>Book catalog</h1>
-                    <p>Search and filter the complete collection.</p>
+                    <h1 th:text="#{catalog.title}">Book catalog</h1>
+                    <p th:text="#{catalog.subtitle}">Search and filter the complete collection.</p>
                 </div>
             </div>
             <div class="top-actions">
-                <a th:href="@{/borrowings}" class="btn">My borrowings</a>
+                <a th:href="@{/borrowings}" class="btn" th:text="#{nav.borrowings}">My borrowings</a>
             </div>
         </header>
 
@@ -42,11 +42,11 @@
         <form method="get" th:action="@{/catalog}" class="search-row">
             <div class="search-box">
                 <span>⌕</span>
-                <input name="query" placeholder="Search title, author or ISBN…"
-                       th:value="${query}">
+                <input name="query" th:placeholder="#{catalog.searchPlaceholder}"
+                       placeholder="Search title, author or ISBN…" th:value="${query}">
             </div>
             <select name="genreId" onchange="this.form.submit()" aria-label="Filter by genre">
-                <option value="">All genres</option>
+                <option value="" th:text="#{catalog.allGenres}">All genres</option>
                 <option th:each="genre : ${genres}"
                         th:value="${genre.genreId}"
                         th:text="${genre.name}"
@@ -54,7 +54,7 @@
                 </option>
             </select>
             <select name="authorId" onchange="this.form.submit()" aria-label="Filter by author">
-                <option value="">All authors</option>
+                <option value="" th:text="#{catalog.allAuthors}">All authors</option>
                 <option th:each="author : ${authors}"
                         th:value="${author.authorId}"
                         th:text="${author.fullName}"
@@ -62,17 +62,18 @@
                 </option>
             </select>
             <select name="availability" onchange="this.form.submit()" aria-label="Filter by availability">
-                <option value="">Any availability</option>
-                <option value="available" th:selected="${selectedAvailability == 'available'}">Available now</option>
+                <option value="" th:text="#{catalog.anyAvailability}">Any availability</option>
+                <option value="available" th:selected="${selectedAvailability == 'available'}"
+                        th:text="#{catalog.availableNow}">Available now</option>
             </select>
-            <button type="submit" class="btn">Apply</button>
+            <button type="submit" class="btn" th:text="#{common.apply}">Apply</button>
         </form>
 
         <!-- Section header -->
         <div class="section-head">
             <div>
-                <h2>Library collection</h2>
-                <p th:text="|${#lists.size(books)} title${#lists.size(books) == 1 ? '' : 's'} found|">titles found</p>
+                <h2 th:text="#{catalog.collection}">Library collection</h2>
+                <p th:text="#{catalog.found(${#lists.size(books)})}">titles found</p>
             </div>
         </div>
 
@@ -94,19 +95,19 @@
                     </p>
                     <div class="book-foot">
                         <span th:if="${book.availableCopies > 0}" class="status">
-                            <span th:text="${book.availableCopies}">2</span> available
+                            <span th:text="${book.availableCopies}">2</span> <span th:text="#{catalog.available}">available</span>
                         </span>
-                        <span th:if="${book.availableCopies == 0}" class="status out">
+                        <span th:if="${book.availableCopies == 0}" class="status out" th:text="#{catalog.unavailable}">
                             Unavailable
                         </span>
-                        <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small">Details</a>
+                        <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small" th:text="#{common.details}">Details</a>
                     </div>
                 </div>
             </article>
         </div>
 
         <!-- Empty state -->
-        <div th:if="${#lists.isEmpty(books)}" class="panel empty">
+        <div th:if="${#lists.isEmpty(books)}" class="panel empty" th:text="#{catalog.empty}">
             No books match your filters.
         </div>
 

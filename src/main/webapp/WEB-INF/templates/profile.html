@@ -18,8 +18,8 @@
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
-                    <h1>My profile</h1>
-                    <p>View and update your account details.</p>
+                    <h1 th:text="#{profile.title}">My profile</h1>
+                    <p th:text="#{profile.subtitle}">View and update your account details.</p>
                 </div>
             </div>
         </header>
@@ -47,19 +47,19 @@
 
                 <div style="display: grid; gap: 0;">
                     <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
-                        <span style="color: var(--muted);">Email</span>
+                        <span style="color: var(--muted);" th:text="#{auth.email}">Email</span>
                         <strong th:text="${user.email}">email</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
-                        <span style="color: var(--muted);">Phone</span>
+                        <span style="color: var(--muted);" th:text="#{auth.phone}">Phone</span>
                         <strong th:text="${user.phoneNumber != null and !user.phoneNumber.isEmpty() ? user.phoneNumber : '—'}">—</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
-                        <span style="color: var(--muted);">Member since</span>
+                        <span style="color: var(--muted);" th:text="#{profile.memberSince}">Member since</span>
                         <strong th:text="${user.registrationDate}">date</strong>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
-                        <span style="color: var(--muted);">User ID</span>
+                        <span style="color: var(--muted);" th:text="#{profile.userId}">User ID</span>
                         <strong>#<span th:text="${user.userId}">0</span></strong>
                     </div>
                 </div>
@@ -67,29 +67,29 @@
 
             <!-- Edit form -->
             <div class="panel" style="padding: 28px;">
-                <span class="eyebrow" style="color: var(--brand);">Edit details</span>
-                <h2 style="margin: 6px 0 18px;">Update your info</h2>
+                <span class="eyebrow" style="color: var(--brand);" th:text="#{profile.editDetails}">Edit details</span>
+                <h2 style="margin: 6px 0 18px;" th:text="#{profile.update}">Update your info</h2>
                 <form method="post" th:action="@{/profile/update}"
                       style="display: grid; gap: 16px;">
                     <div>
-                        <label for="username" style="display:block; margin-bottom:6px;"><strong>Username</strong></label>
+                        <label for="username" style="display:block; margin-bottom:6px;"><strong th:text="#{auth.username}">Username</strong></label>
                         <input type="text" id="username" name="username" required minlength="3"
                                th:value="${user.username}">
                     </div>
                     <div>
-                        <label for="email" style="display:block; margin-bottom:6px;"><strong>Email</strong></label>
+                        <label for="email" style="display:block; margin-bottom:6px;"><strong th:text="#{auth.email}">Email</strong></label>
                         <input type="email" id="email" name="email" required
                                th:value="${user.email}">
                     </div>
                     <div>
-                        <label for="phoneNumber" style="display:block; margin-bottom:6px;"><strong>Phone number</strong></label>
+                        <label for="phoneNumber" style="display:block; margin-bottom:6px;"><strong th:text="#{auth.phone}">Phone number</strong></label>
                         <input type="tel" id="phoneNumber" name="phoneNumber"
                                th:value="${user.phoneNumber}"
                                maxlength="20" pattern="[0-9 +()-]{7,20}"
                                title="7 to 20 characters: digits and the symbols + - ( ) space"
                                placeholder="+1-555-0100">
                     </div>
-                    <button type="submit" class="btn" style="justify-self: start;">Save changes</button>
+                    <button type="submit" class="btn" style="justify-self: start;" th:text="#{common.save}">Save changes</button>
                 </form>
             </div>
         </div>

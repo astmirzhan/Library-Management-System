@@ -18,12 +18,12 @@
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
-                    <h1>My borrowed books</h1>
-                    <p>Track active loans and due dates.</p>
+                    <h1 th:text="#{borrowings.title}">My borrowed books</h1>
+                    <p th:text="#{borrowings.subtitle}">Track active loans and due dates.</p>
                 </div>
             </div>
             <div class="top-actions">
-                <a th:href="@{/catalog}" class="btn">Browse catalog</a>
+                <a th:href="@{/catalog}" class="btn" th:text="#{common.browse}">Browse catalog</a>
             </div>
         </header>
 
@@ -40,42 +40,42 @@
         <!-- Stats -->
         <div class="stats">
             <div class="panel stat">
-                <span>Currently borrowed</span>
+                <span th:text="#{borrowings.currentlyBorrowed}">Currently borrowed</span>
                 <strong th:text="${currentlyBorrowed}">0</strong>
-                <small>Active loans</small>
+                <small th:text="#{borrowings.activeLoans}">Active loans</small>
             </div>
             <div class="panel stat">
-                <span>Due soon</span>
+                <span th:text="#{borrowings.dueSoon}">Due soon</span>
                 <strong th:text="${dueSoon}">0</strong>
-                <small>Within 7 days</small>
+                <small th:text="#{borrowings.within7}">Within 7 days</small>
             </div>
             <div class="panel stat">
-                <span>Returned</span>
+                <span th:text="#{borrowings.returned}">Returned</span>
                 <strong th:text="${returnedCount}">0</strong>
-                <small>Reading history</small>
+                <small th:text="#{borrowings.history}">Reading history</small>
             </div>
             <div class="panel stat">
-                <span>Reviews written</span>
+                <span th:text="#{borrowings.reviewsWritten}">Reviews written</span>
                 <strong th:text="${reviewsWritten}">0</strong>
-                <small>Ratings and comments</small>
+                <small th:text="#{borrowings.ratings}">Ratings and comments</small>
             </div>
         </div>
 
         <div th:if="${#lists.isEmpty(records)}" class="panel empty">
-            You haven't borrowed any books yet.
-            <a th:href="@{/catalog}" style="color: var(--brand); font-weight: 700;">Browse the catalog →</a>
+            <span th:text="#{borrowings.empty}">You haven't borrowed any books yet.</span>
+            <a th:href="@{/catalog}" style="color: var(--brand); font-weight: 700;" th:text="#{common.browse}">Browse the catalog →</a>
         </div>
 
         <div th:if="${not #lists.isEmpty(records)}" class="panel table-wrap">
             <table>
                 <thead>
                 <tr>
-                    <th>Book</th>
-                    <th>Copy</th>
-                    <th>Borrowed</th>
-                    <th>Due date</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th th:text="#{col.book}">Book</th>
+                    <th th:text="#{col.copy}">Copy</th>
+                    <th th:text="#{col.borrowed}">Borrowed</th>
+                    <th th:text="#{col.dueDate}">Due date</th>
+                    <th th:text="#{col.status}">Status</th>
+                    <th th:text="#{common.actions}">Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -91,25 +91,25 @@
                     <td th:text="${record.borrowDate}">date</td>
                     <td th:text="${record.dueDate}">date</td>
                     <td>
-                        <span th:if="${record.status.name() == 'APPROVED'}" class="status">Active</span>
-                        <span th:if="${record.status.name() == 'REQUESTED'}" class="status pending">Pending</span>
-                        <span th:if="${record.status.name() == 'RETURN_REQUESTED'}" class="status pending">Return pending</span>
-                        <span th:if="${record.status.name() == 'RETURNED'}" class="status returned">Returned</span>
-                        <span th:if="${record.status.name() == 'REJECTED'}" class="status out">Rejected</span>
+                        <span th:if="${record.status.name() == 'APPROVED'}" class="status" th:text="#{status.active}">Active</span>
+                        <span th:if="${record.status.name() == 'REQUESTED'}" class="status pending" th:text="#{status.pending}">Pending</span>
+                        <span th:if="${record.status.name() == 'RETURN_REQUESTED'}" class="status pending" th:text="#{status.returnPending}">Return pending</span>
+                        <span th:if="${record.status.name() == 'RETURNED'}" class="status returned" th:text="#{status.returned}">Returned</span>
+                        <span th:if="${record.status.name() == 'REJECTED'}" class="status out" th:text="#{status.rejected}">Rejected</span>
                     </td>
                     <td>
                         <form th:if="${record.status.name() == 'APPROVED'}"
                               method="post"
                               th:action="@{/borrowings/return/{id}(id=${record.borrowId})}"
                               style="display:inline">
-                            <button type="submit" class="btn ghost small">Return</button>
+                            <button type="submit" class="btn ghost small" th:text="#{common.return}">Return</button>
                         </form>
                         <a th:if="${record.status.name() == 'RETURNED' and record.book != null}"
                            th:href="@{/catalog/{id}(id=${record.book.bookId})}"
-                           class="btn secondary small">Review</a>
+                           class="btn secondary small" th:text="#{common.review}">Review</a>
                         <span th:if="${record.status.name() == 'REQUESTED'}" style="color: var(--muted);">—</span>
                         <span th:if="${record.status.name() == 'RETURN_REQUESTED'}"
-                              style="color: var(--muted);">Awaiting confirm</span>
+                              style="color: var(--muted);" th:text="#{status.awaitingConfirm}">Awaiting confirm</span>
                     </td>
                 </tr>
                 </tbody>

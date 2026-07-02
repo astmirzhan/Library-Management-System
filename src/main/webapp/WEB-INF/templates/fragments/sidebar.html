@@ -35,13 +35,15 @@
         </th:block>
     </nav>
 
-    <!-- Language switcher (relative ?lang= keeps the current page) -->
-    <div style="padding: 8px 13px; display: flex; gap: 8px; align-items: center;">
-        <a href="?lang=en" style="color:#c8dad1; text-decoration:none; font-weight:800;"
-           th:text="#{lang.en}">EN</a>
-        <span style="color:#5c7565;">|</span>
-        <a href="?lang=ru" style="color:#c8dad1; text-decoration:none; font-weight:800;"
-           th:text="#{lang.ru}">RU</a>
+    <!-- Language switcher (relative ?lang= keeps the current page; active language highlighted) -->
+    <div style="margin: 10px 8px; display: flex; gap: 6px; align-items: center;
+                background: rgba(255,255,255,.06); border-radius: 12px; padding: 5px;">
+        <a href="?lang=en" th:text="#{lang.en}"
+           th:style="|flex:1; text-align:center; padding:8px 0; border-radius:9px; text-decoration:none; font-weight:800; font-size:14px;
+                      ${#locale.language == 'en'} ? 'background:#e9a23b; color:#17231d;' : 'color:#c8dad1;'|">EN</a>
+        <a href="?lang=ru" th:text="#{lang.ru}"
+           th:style="|flex:1; text-align:center; padding:8px 0; border-radius:9px; text-decoration:none; font-weight:800; font-size:14px;
+                      ${#locale.language == 'ru'} ? 'background:#e9a23b; color:#17231d;' : 'color:#c8dad1;'|">RU</a>
     </div>
 
     <div class="user-chip">

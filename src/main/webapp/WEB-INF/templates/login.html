@@ -15,23 +15,27 @@
     <div class="login-art">
         <div class="brand"><span class="brand-mark">⌁</span> Library</div>
         <div class="login-copy">
-            <h1>Your next chapter starts here.</h1>
-            <p>Discover, borrow, review and manage books through one polished digital library experience.</p>
+            <h1 th:text="#{auth.heroTitle}">Your next chapter starts here.</h1>
+            <p th:text="#{auth.heroSubtitle}">Discover, borrow, review and manage books through one polished digital library experience.</p>
         </div>
         <footer></footer>
     </div>
     <div class="login-panel">
         <div class="login-card">
-            <div style="text-align:right; margin-bottom:8px; font-size:13px;">
-                <a href="?lang=en" style="color:var(--brand); font-weight:800; text-decoration:none;" th:text="#{lang.en}">EN</a>
-                <span style="color:var(--muted);">|</span>
-                <a href="?lang=ru" style="color:var(--brand); font-weight:800; text-decoration:none;" th:text="#{lang.ru}">RU</a>
+            <div style="display:flex; gap:6px; justify-content:flex-end; margin-bottom:14px;">
+                <a href="?lang=en" th:text="#{lang.en}"
+                   th:style="|padding:6px 14px; border-radius:9px; text-decoration:none; font-weight:800; font-size:13px;
+                              ${#locale.language == 'en'} ? 'background:var(--brand); color:#fff;' : 'background:var(--brand-2); color:var(--brand);'|">EN</a>
+                <a href="?lang=ru" th:text="#{lang.ru}"
+                   th:style="|padding:6px 14px; border-radius:9px; text-decoration:none; font-weight:800; font-size:13px;
+                              ${#locale.language == 'ru'} ? 'background:var(--brand); color:#fff;' : 'background:var(--brand-2); color:var(--brand);'|">RU</a>
             </div>
             <h2 th:text="#{auth.loginTitle}">Sign in to Library</h2>
             <p th:text="#{auth.loginSubtitle}">Use your role credentials to access your dashboard.</p>
 
             <div th:if="${param.registered}"
-                 style="padding: 12px; border-radius: 12px; background: var(--brand-2); color: var(--brand); font-size: 13px; font-weight: 600; margin-bottom: 16px;">
+                 style="padding: 12px; border-radius: 12px; background: var(--brand-2); color: var(--brand); font-size: 13px; font-weight: 600; margin-bottom: 16px;"
+                 th:text="#{auth.registered}">
                 Registration successful! Please sign in.
             </div>
 
