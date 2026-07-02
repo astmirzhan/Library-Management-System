@@ -386,6 +386,62 @@ public class BookDAO implements BaseDAO<Book, Integer> {
     }
 
     /**
+     * Searches books strictly by title (librarian inventory search).
+     *
+     * @param query  title fragment (case-insensitive)
+     * @param limit  max records per page
+     * @param offset records to skip
+     * @return list of matching books
+     * @throws SQLException if database error occurs
+     */
+    public List<Book> searchByTitle(String query, int limit, int offset) throws SQLException {
+        String sql = "SELECT * FROM book WHERE LOWER(title) LIKE LOWER(?) " +
+                "ORDER BY title LIMIT ? OFFSET ?";
+        List<Book> books = new ArrayList<>();
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + query + "%");
+            stmt.setInt(2, limit);
+            stmt.setInt(3, offset);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    books.add(mapResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to search books by title: {}", query, e);
+            throw e;
+        }
+        return books;
+    }
+
+    /**
+     * Counts books whose title matches the query (for inventory search pagination).
+     */
+    public int countByTitle(String query) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM book WHERE LOWER(title) LIKE LOWER(?)";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + query + "%");
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count books by title: {}", query, e);
+            throw e;
+        }
+        return 0;
+    }
+
+    /**
      * Counts books matching a search query (title or ISBN). For pagination of search results.
      */
     public int countSearch(String query) throws SQLException {

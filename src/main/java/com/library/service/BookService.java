@@ -3,6 +3,7 @@ package com.library.service;
 import com.library.dao.AuthorDAO;
 import com.library.dao.BookCopyDAO;
 import com.library.dao.BookDAO;
+import com.library.dao.BorrowRecordDAO;
 import com.library.dao.GenreDAO;
 import com.library.model.Author;
 import com.library.model.Book;
@@ -25,18 +26,21 @@ import java.util.Optional;
 public class BookService {
 
     private static final Logger logger = LogManager.getLogger(BookService.class);
+    private static final int MAX_COPIES = 100;
     private final BookDAO bookDAO;
     private final AuthorDAO authorDAO;
     private final GenreDAO genreDAO;
     private final BookCopyDAO bookCopyDAO;
+    private final BorrowRecordDAO borrowDAO;
 
     @Autowired
     public BookService(BookDAO bookDAO, AuthorDAO authorDAO, GenreDAO genreDAO,
-                       BookCopyDAO bookCopyDAO) {
+                       BookCopyDAO bookCopyDAO, BorrowRecordDAO borrowDAO) {
         this.bookDAO = bookDAO;
         this.authorDAO = authorDAO;
         this.genreDAO = genreDAO;
         this.bookCopyDAO = bookCopyDAO;
+        this.borrowDAO = borrowDAO;
     }
 
     /**
@@ -52,8 +56,8 @@ public class BookService {
      */
     public Book createBook(Book book, List<Integer> authorIds, List<Integer> genreIds, int copies)
             throws SQLException {
-        if (copies < 1) {
-            throw new IllegalArgumentException("Number of copies must be at least 1");
+        if (copies < 1 || copies > MAX_COPIES) {
+            throw new IllegalArgumentException("Number of copies must be between 1 and " + MAX_COPIES);
         }
         book.setTotalCopies(copies);
         book.setAvailableCopies(copies);
@@ -79,8 +83,8 @@ public class BookService {
      * @throws SQLException if database error occurs
      */
     public void addCopies(int bookId, int count) throws SQLException {
-        if (count < 1) {
-            throw new IllegalArgumentException("Number of copies must be at least 1");
+        if (count < 1 || count > MAX_COPIES) {
+            throw new IllegalArgumentException("Number of copies must be between 1 and " + MAX_COPIES);
         }
         int start = bookCopyDAO.findByBookId(bookId).size();
         for (int i = 1; i <= count; i++) {
@@ -144,6 +148,44 @@ public class BookService {
      * @return list of books in the genre
      * @throws SQLException if database error occurs
      */
+    /**
+     * Searches books strictly by title with pagination (librarian inventory search).
+     *
+     * @param query    title fragment
+     * @param page     page number (1-indexed)
+     * @param pageSize page size
+     * @return list of matching books
+     * @throws SQLException if database error occurs
+     */
+    public List<Book> searchBooksByTitle(String query, int page, int pageSize) throws SQLException {
+        int offset = (page - 1) * pageSize;
+        return bookDAO.searchByTitle(query.trim(), pageSize, offset);
+    }
+
+    /**
+     * Counts books whose title matches the query.
+     */
+    public int getTitleSearchCount(String query) throws SQLException {
+        return bookDAO.countByTitle(query.trim());
+    }
+
+    /**
+     * Returns all books by a given author, enriched with authors and genres
+     * (for the catalog author filter).
+     *
+     * @param authorId the author ID
+     * @return list of the author's books
+     * @throws SQLException if database error occurs
+     */
+    public List<Book> getBooksByAuthor(int authorId) throws SQLException {
+        List<Book> books = bookDAO.findByAuthor(authorId);
+        for (Book book : books) {
+            book.setAuthors(authorDAO.findByBookId(book.getBookId()));
+            book.setGenres(genreDAO.findByBookId(book.getBookId()));
+        }
+        return books;
+    }
+
     public List<Book> getBooksByGenre(int genreId, int page, int pageSize) throws SQLException {
         int offset = (page - 1) * pageSize;
         return bookDAO.findByGenre(genreId, pageSize, offset);
@@ -207,6 +249,30 @@ public class BookService {
     }
 
     /**
+     * Updates the editable fields (title, ISBN, year, description) of an existing book,
+     * preserving copy counts.
+     *
+     * @param bookId      the book ID
+     * @param title       new title
+     * @param isbn        new ISBN
+     * @param year        new publication year
+     * @param description new description (may be null)
+     * @return true if updated
+     * @throws SQLException             if database error occurs
+     * @throws IllegalArgumentException if book not found or validation fails
+     */
+    public boolean editBook(int bookId, String title, String isbn, int year, String description)
+            throws SQLException {
+        Book book = bookDAO.findById(bookId)
+                .orElseThrow(() -> new IllegalArgumentException("Book not found: " + bookId));
+        book.setTitle(title);
+        book.setIsbn(isbn);
+        book.setPublicationYear(year);
+        book.setDescription(description);
+        return updateBook(book);   // validateBook + persist
+    }
+
+    /**
      * Deletes a book by ID.
      *
      * @param bookId the book ID
@@ -214,6 +280,15 @@ public class BookService {
      * @throws SQLException if database error occurs
      */
     public boolean deleteBook(int bookId) throws SQLException {
+        if (borrowDAO.hasActiveBorrowsForBook(bookId)) {
+            throw new IllegalStateException(
+                    "Cannot delete: this book has active borrow requests or loans");
+        }
+        if (borrowDAO.hasAnyBorrowsForBook(bookId)) {
+            throw new IllegalStateException(
+                    "Cannot delete: this book has borrowing history");
+        }
+        // No borrow history — safe to delete (copies are removed via ON DELETE CASCADE).
         return bookDAO.deleteById(bookId);
     }
 
@@ -225,6 +300,20 @@ public class BookService {
      */
     public int getBookCount() throws SQLException {
         return bookDAO.count();
+    }
+
+    /**
+     * Returns the total number of physical copies.
+     */
+    public int getCopyCount() throws SQLException {
+        return bookCopyDAO.countAll();
+    }
+
+    /**
+     * Returns the number of copies in the given condition.
+     */
+    public int getCopyCountByCondition(com.library.model.BookCopy.Condition condition) throws SQLException {
+        return bookCopyDAO.countByCondition(condition);
     }
 
     /**

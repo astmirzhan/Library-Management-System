@@ -106,6 +106,29 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
     }
 
     /**
+     * Returns the total number of borrow records (for pagination).
+     *
+     * @return total borrow record count
+     * @throws SQLException if database error occurs
+     */
+    public int count() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM borrow_record";
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count borrow records", e);
+            throw e;
+        }
+        return 0;
+    }
+
+    /**
      * Returns borrow records with pagination.
      *
      * @param limit  max records per page
@@ -193,6 +216,37 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
     }
 
     /**
+     * Checks whether a user currently holds (or has requested) any copy of a given book —
+     * i.e. an active borrow that is not yet returned. Used to prevent borrowing the same
+     * book twice at once.
+     *
+     * @param userId the user ID
+     * @param bookId the book ID
+     * @return true if the user has an active borrow/request for the book
+     * @throws SQLException if database error occurs
+     */
+    public boolean hasActiveBorrowForBook(int userId, int bookId) throws SQLException {
+        String sql = "SELECT 1 FROM borrow_record br " +
+                "JOIN book_copy bc ON bc.copy_id = br.copy_id " +
+                "WHERE br.user_id = ? AND bc.book_id = ? AND br.return_date IS NULL " +
+                "AND br.status IN ('REQUESTED', 'APPROVED', 'RETURN_REQUESTED') LIMIT 1";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to check active borrow for user {} book {}", userId, bookId, e);
+            throw e;
+        }
+    }
+
+    /**
      * Finds active (not returned) borrow records for a user.
      *
      * @param userId the user ID
@@ -271,6 +325,69 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
     }
 
     /**
+     * Counts currently active loans across all users (APPROVED and not returned).
+     *
+     * @return number of active loans
+     * @throws SQLException if database error occurs
+     */
+    public int countActiveLoans() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM borrow_record WHERE return_date IS NULL AND status = 'APPROVED'";
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            logger.error("Failed to count active loans", e);
+            throw e;
+        }
+        return 0;
+    }
+
+    /**
+     * Counts physical copies that are currently held (any not-returned active borrow).
+     *
+     * @return number of borrowed copies
+     * @throws SQLException if database error occurs
+     */
+    public int countBorrowedCopies() throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT copy_id) FROM borrow_record " +
+                "WHERE return_date IS NULL AND status IN ('REQUESTED','APPROVED','RETURN_REQUESTED')";
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            logger.error("Failed to count borrowed copies", e);
+            throw e;
+        }
+        return 0;
+    }
+
+    /**
+     * Finds all pending return requests (status = RETURN_REQUESTED) for librarian confirmation.
+     *
+     * @return list of records awaiting return confirmation
+     * @throws SQLException if database error occurs
+     */
+    public List<BorrowRecord> findReturnRequested() throws SQLException {
+        String sql = "SELECT * FROM borrow_record WHERE status = 'RETURN_REQUESTED' ORDER BY due_date";
+        List<BorrowRecord> records = new ArrayList<>();
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                records.add(mapResultSet(rs));
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to find return requests", e);
+            throw e;
+        }
+        return records;
+    }
+
+    /**
      * Counts active (not returned) borrow records for a user.
      * Used to enforce max borrowing limit.
      *
@@ -280,7 +397,7 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
      */
     public int countActiveByUserId(int userId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM borrow_record WHERE user_id = ? " +
-                "AND return_date IS NULL AND status IN ('REQUESTED', 'APPROVED')";
+                "AND return_date IS NULL AND status IN ('REQUESTED', 'APPROVED', 'RETURN_REQUESTED')";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -297,6 +414,184 @@ public class BorrowRecordDAO implements BaseDAO<BorrowRecord, Integer> {
             throw e;
         }
         return 0;
+    }
+
+    /**
+     * Checks whether a book has any active borrow (requested / approved / return pending)
+     * across all its copies. Used to prevent deleting a book that is in use.
+     *
+     * @param bookId the book ID
+     * @return true if at least one copy has an active, not-returned borrow
+     * @throws SQLException if database error occurs
+     */
+    public boolean hasActiveBorrowsForBook(int bookId) throws SQLException {
+        String sql = "SELECT 1 FROM borrow_record br " +
+                "JOIN book_copy bc ON bc.copy_id = br.copy_id " +
+                "WHERE bc.book_id = ? AND br.return_date IS NULL " +
+                "AND br.status IN ('REQUESTED','APPROVED','RETURN_REQUESTED') LIMIT 1";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, bookId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to check active borrows for book {}", bookId, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Returns the total of all fines charged across the library.
+     *
+     * @return total fine amount
+     * @throws SQLException if database error occurs
+     */
+    public BigDecimal totalFines() throws SQLException {
+        String sql = "SELECT COALESCE(SUM(fine_amount), 0) FROM borrow_record";
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getBigDecimal(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to sum fines", e);
+            throw e;
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * Returns the most borrowed books as [title, borrowCount] rows, ranked by loan count.
+     *
+     * @param limit max rows
+     * @return list of Object[]{String title, Long count}
+     * @throws SQLException if database error occurs
+     */
+    public List<Object[]> mostBorrowedBooks(int limit) throws SQLException {
+        String sql = "SELECT b.title, COUNT(*) AS cnt " +
+                "FROM borrow_record br " +
+                "JOIN book_copy bc ON bc.copy_id = br.copy_id " +
+                "JOIN book b ON b.book_id = bc.book_id " +
+                "GROUP BY b.book_id, b.title ORDER BY cnt DESC LIMIT ?";
+        List<Object[]> rows = new ArrayList<>();
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(new Object[]{rs.getString(1), rs.getLong(2)});
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to load most borrowed books", e);
+            throw e;
+        }
+        return rows;
+    }
+
+    /**
+     * Returns overdue-borrow counts per month (1-12) for the given year.
+     * A record counts as overdue if its due date is in that month and it was
+     * returned late or is still not returned past due.
+     *
+     * @param year the calendar year
+     * @return int[13] where index 1..12 holds the month counts (index 0 unused)
+     * @throws SQLException if database error occurs
+     */
+    public int[] overdueCountsByMonth(int year) throws SQLException {
+        String sql = "SELECT EXTRACT(MONTH FROM due_date)::int AS m, COUNT(*) " +
+                "FROM borrow_record " +
+                "WHERE EXTRACT(YEAR FROM due_date) = ? " +
+                "AND ((return_date IS NOT NULL AND return_date > due_date) " +
+                "     OR (return_date IS NULL AND due_date < CURRENT_DATE)) " +
+                "GROUP BY m";
+        int[] months = new int[13];
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int m = rs.getInt(1);
+                    if (m >= 1 && m <= 12) months[m] = rs.getInt(2);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to load overdue counts by month", e);
+            throw e;
+        }
+        return months;
+    }
+
+    /**
+     * Checks whether a book has any borrow records at all (active or historical),
+     * which — under the RESTRICT FK — makes physical deletion impossible.
+     *
+     * @param bookId the book ID
+     * @return true if any borrow record references a copy of the book
+     * @throws SQLException if database error occurs
+     */
+    public boolean hasAnyBorrowsForBook(int bookId) throws SQLException {
+        String sql = "SELECT 1 FROM borrow_record br " +
+                "JOIN book_copy bc ON bc.copy_id = br.copy_id " +
+                "WHERE bc.book_id = ? LIMIT 1";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, bookId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to check borrow history for book {}", bookId, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Rejects a pending borrow request (librarian-initiated).
+     *
+     * @param borrowId the borrow record ID
+     * @return true if updated (was REQUESTED)
+     * @throws SQLException if database error occurs
+     */
+    public boolean reject(int borrowId) throws SQLException {
+        String sql = "UPDATE borrow_record SET status = 'REJECTED' " +
+                "WHERE borrow_id = ? AND status = 'REQUESTED'";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, borrowId);
+            int rows = stmt.executeUpdate();
+            logger.info("BorrowRecord rejected: id={}, rows={}", borrowId, rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            logger.error("Failed to reject borrow record: {}", borrowId, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Marks a borrow record as awaiting return confirmation (reader-initiated).
+     *
+     * @param borrowId the borrow record ID
+     * @return true if updated
+     * @throws SQLException if database error occurs
+     */
+    public boolean requestReturn(int borrowId) throws SQLException {
+        String sql = "UPDATE borrow_record SET status = 'RETURN_REQUESTED' " +
+                "WHERE borrow_id = ? AND status = 'APPROVED' AND return_date IS NULL";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, borrowId);
+            int rows = stmt.executeUpdate();
+            logger.info("Return requested for borrow record: id={}, rows={}", borrowId, rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            logger.error("Failed to request return for borrow record: {}", borrowId, e);
+            throw e;
+        }
     }
 
     /**
