@@ -11,39 +11,18 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/librarian/dashboard}" class="active">📊 Dashboard</a>
-            <a th:href="@{/librarian/books}">📖 Book inventory</a>
-            <a th:href="@{/librarian/borrows}">📋 Borrowing records</a>
-            <a th:href="@{/librarian/overdue}">⏰ Overdue</a>
-            <a th:href="@{/catalog}">🔍 View catalog</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">L
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user.username}">User</strong>
-                    <small>Librarian account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></aside>
 
     <main class="main">
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
                     <h1>Librarian dashboard</h1>
-                    <p>Manage requests, approvals and inventory.</p>
+                    <p>A clear view of library operations.</p>
                 </div>
             </div>
             <div class="top-actions">
-                <a th:href="@{/librarian/books}" class="btn">+ Add new book</a>
+                <a th:href="@{/librarian/books/new}" class="btn">+ Issue book</a>
             </div>
         </header>
 
@@ -60,67 +39,102 @@
                 <h2>Library operations overview</h2>
                 <p>Monitor copies, loans, reviews and overdue reminders.</p>
             </div>
-            <a th:href="@{/librarian/borrows}" class="btn">View all borrows</a>
+            <a th:href="@{/librarian/books/new}" class="btn">+ Add new book</a>
         </div>
 
         <!-- Stats -->
         <div class="stats">
             <div class="panel stat">
-                <span>Pending requests</span>
-                <strong th:text="${pendingCount}">0</strong>
-                <small>Awaiting approval</small>
+                <span>Total titles</span>
+                <strong th:text="${totalTitles}">0</strong>
+                <small>Across all genres</small>
+            </div>
+            <div class="panel stat">
+                <span>Physical copies</span>
+                <strong th:text="${totalCopies}">0</strong>
+                <small>Inventory units</small>
+            </div>
+            <div class="panel stat">
+                <span>Active loans</span>
+                <strong th:text="${activeLoans}">0</strong>
+                <small>Currently borrowed</small>
             </div>
             <div class="panel stat">
                 <span>Overdue</span>
                 <strong th:text="${overdueCount}">0</strong>
                 <small style="color: var(--danger);">Requires attention</small>
             </div>
-            <div class="panel stat">
-                <span>Total books</span>
-                <strong th:text="${totalBooks}">0</strong>
-                <small>Titles in catalog</small>
-            </div>
         </div>
 
-        <!-- Pending requests -->
-        <div class="section-head">
+        <!-- Two-column: recent activity + copy health -->
+        <div class="split-grid" style="align-items: start; margin-top: 8px;">
             <div>
-                <h2>Pending borrow requests</h2>
-                <p>Approve or review requests awaiting decision.</p>
+                <div class="section-head">
+                    <div>
+                        <h2>Recent borrowing activity</h2>
+                        <p>Latest circulation records.</p>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(recentBorrows)}" class="panel empty">
+                    No borrowing records yet.
+                </div>
+
+                <div th:if="${not #lists.isEmpty(recentBorrows)}" class="panel table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Reader</th>
+                            <th>Book copy</th>
+                            <th>Borrowed</th>
+                            <th>Due date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="record : ${recentBorrows}">
+                            <td th:text="${record.user != null ? record.user.username : ('#' + record.userId)}">Reader</td>
+                            <td>
+                                <span th:text="${record.book != null ? record.book.title : ('Copy #' + record.copyId)}">Book</span>
+                                <span th:if="${record.copyNumber != null}"
+                                      th:text="| · copy #${record.copyNumber}|"> · copy #1</span>
+                            </td>
+                            <td th:text="${record.borrowDate}">date</td>
+                            <td th:text="${record.dueDate}">date</td>
+                            <td>
+                                <span th:if="${record.status.name() == 'APPROVED'}" class="status">Active</span>
+                                <span th:if="${record.status.name() == 'REQUESTED'}" class="status pending">Pending</span>
+                                <span th:if="${record.status.name() == 'RETURN_REQUESTED'}" class="status pending">Return pending</span>
+                                <span th:if="${record.status.name() == 'RETURNED'}" class="status returned">Returned</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
 
-        <div th:if="${#lists.isEmpty(pendingRequests)}" class="panel empty">
-            No pending requests at the moment.
-        </div>
-
-        <div th:if="${not #lists.isEmpty(pendingRequests)}" class="panel table-wrap">
-            <table>
-                <thead>
-                <tr>
-                    <th>Request</th>
-                    <th>Reader ID</th>
-                    <th>Copy ID</th>
-                    <th>Requested on</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="record : ${pendingRequests}">
-                    <td>#<span th:text="${record.borrowId}">1</span></td>
-                    <td th:text="${record.userId}">1</td>
-                    <td th:text="${record.copyId}">1</td>
-                    <td th:text="${record.borrowDate}">date</td>
-                    <td>
-                        <form method="post"
-                              th:action="@{/librarian/borrows/approve/{id}(id=${record.borrowId})}"
-                              style="display:inline">
-                            <button type="submit" class="btn secondary small">✓ Approve</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <div>
+                <div class="section-head">
+                    <div>
+                        <h2>Copy health</h2>
+                        <p>Inventory status snapshot.</p>
+                    </div>
+                </div>
+                <div class="panel" style="padding: 20px; display: grid; gap: 12px;">
+                    <div th:each="row : ${ {
+                            {'AVAILABLE', healthAvailable},
+                            {'BORROWED', healthBorrowed},
+                            {'WORN', healthWorn},
+                            {'DAMAGED', healthDamaged} } }"
+                         class="panel" style="padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+                        <strong style="width: 110px;" th:text="${row[0]}">LABEL</strong>
+                        <div style="flex: 1; height: 10px; border-radius: 6px; background: var(--brand-2, #e6efe9);">
+                            <div th:style="|width: ${ (row[1] * 100) / healthMax }%; height: 10px; border-radius: 6px; background: var(--brand);|"></div>
+                        </div>
+                        <strong th:text="${row[1]}">0</strong>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 </section>

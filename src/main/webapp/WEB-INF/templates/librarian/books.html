@@ -11,28 +11,7 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/librarian/dashboard}">📊 Dashboard</a>
-            <a th:href="@{/librarian/books}" class="active">📖 Book inventory</a>
-            <a th:href="@{/librarian/borrows}">📋 Borrowing records</a>
-            <a th:href="@{/librarian/overdue}">⏰ Overdue</a>
-            <a th:href="@{/catalog}">🔍 View catalog</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">L
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user.username}">User</strong>
-                    <small th:text="${user.role.name() + ' account'}">Librarian account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('books')}"></aside>
 
     <main class="main">
         <header class="topbar">
@@ -43,7 +22,7 @@
                 </div>
             </div>
             <div class="top-actions">
-                <a th:href="@{/librarian/books/new}" class="btn">+ Add new book</a>
+                <a th:if="${user.role.name() == 'LIBRARIAN'}" th:href="@{/librarian/books/new}" class="btn">+ Add new book</a>
                 <a th:href="@{/catalog}" class="btn ghost">View public catalog</a>
             </div>
         </header>
@@ -54,6 +33,17 @@
         <div th:if="${error}" class="panel"
              style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
              th:text="${error}"></div>
+
+        <!-- Search by title -->
+        <form method="get" th:action="@{/librarian/books}" class="search-row" style="margin-bottom: 18px;">
+            <div class="search-box">
+                <span>⌕</span>
+                <input name="query" placeholder="Search by book title…" th:value="${query}">
+            </div>
+            <button type="submit" class="btn">Search</button>
+            <a th:if="${query != null and !query.isEmpty()}" th:href="@{/librarian/books}"
+               class="btn ghost">Reset</a>
+        </form>
 
         <div class="section-head">
             <div>
@@ -92,14 +82,22 @@
                         <span th:if="${book.availableCopies == 0}" class="status out">0</span>
                     </td>
                     <td>
-                        <div style="display: flex; gap: 6px; align-items: center;">
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                             <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small">Details</a>
-                            <form method="post" th:action="@{/librarian/books/{id}/copies(id=${book.bookId})}"
-                                  style="display: flex; gap: 4px; align-items: center;">
-                                <input type="number" name="count" value="1" min="1"
-                                       style="width: 56px;" aria-label="Number of copies to add">
-                                <button type="submit" class="btn secondary small">+ Copies</button>
-                            </form>
+                            <th:block th:if="${user.role.name() == 'LIBRARIAN'}">
+                                <a th:href="@{/librarian/books/{id}/edit(id=${book.bookId})}" class="btn ghost small">Edit</a>
+                                <form method="post" th:action="@{/librarian/books/{id}/copies(id=${book.bookId})}"
+                                      style="display: flex; gap: 4px; align-items: center;">
+                                    <input type="number" name="count" value="1" min="1" max="100"
+                                           style="width: 56px;" aria-label="Number of copies to add">
+                                    <button type="submit" class="btn secondary small">+ Copies</button>
+                                </form>
+                                <form method="post" th:action="@{/librarian/books/{id}/delete(id=${book.bookId})}"
+                                      style="display:inline"
+                                      onsubmit="return confirm('Delete this book? This cannot be undone.');">
+                                    <button type="submit" class="btn ghost small" style="color: var(--danger);">Delete</button>
+                                </form>
+                            </th:block>
                         </div>
                     </td>
                 </tr>
@@ -107,14 +105,19 @@
             </table>
         </div>
 
-        <!-- Pagination (prev/next; controller does not expose total count) -->
-        <div style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
+        <!-- Pagination -->
+        <div th:if="${totalPages > 1}"
+             style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
             <a th:if="${currentPage > 1}"
-               th:href="@{/librarian/books(page=${currentPage - 1})}"
+               th:href="@{/librarian/books(page=${currentPage - 1}, query=${query})}"
                class="btn ghost small">← Prev</a>
-            <span class="btn small" th:text="${currentPage}">1</span>
-            <a th:if="${#lists.size(books) == 20}"
-               th:href="@{/librarian/books(page=${currentPage + 1})}"
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                <a th:href="@{/librarian/books(page=${i}, query=${query})}"
+                   th:text="${i}"
+                   th:class="${i == currentPage} ? 'btn small' : 'btn ghost small'">1</a>
+            </span>
+            <a th:if="${currentPage < totalPages}"
+               th:href="@{/librarian/books(page=${currentPage + 1}, query=${query})}"
                class="btn ghost small">Next →</a>
         </div>
     </main>

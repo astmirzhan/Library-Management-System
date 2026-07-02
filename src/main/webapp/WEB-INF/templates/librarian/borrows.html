@@ -11,36 +11,18 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/librarian/dashboard}">📊 Dashboard</a>
-            <a th:href="@{/librarian/books}">📖 Book inventory</a>
-            <a th:href="@{/librarian/borrows}" class="active">📋 Borrowing records</a>
-            <a th:href="@{/librarian/overdue}">⏰ Overdue</a>
-            <a th:href="@{/catalog}">🔍 View catalog</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">L
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user.username}">User</strong>
-                    <small th:text="${user.role.name() + ' account'}">Librarian account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('borrows')}"></aside>
 
     <main class="main">
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
                     <h1>Borrowing records</h1>
-                    <p>All loans across the library.</p>
+                    <p>Issue books, monitor due dates and register returns.</p>
                 </div>
+            </div>
+            <div class="top-actions">
+                <a th:href="@{/librarian/books/new}" class="btn">+ Issue a book</a>
             </div>
         </header>
 
@@ -51,10 +33,21 @@
              style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
              th:text="${error}"></div>
 
+        <!-- Search by reader name -->
+        <form method="get" th:action="@{/librarian/borrows}" class="search-row" style="margin-bottom: 18px;">
+            <div class="search-box">
+                <span>⌕</span>
+                <input name="query" placeholder="Search by reader name…" th:value="${query}">
+            </div>
+            <button type="submit" class="btn">Search</button>
+            <a th:if="${query != null and !query.isEmpty()}" th:href="@{/librarian/borrows}"
+               class="btn ghost">Reset</a>
+        </form>
+
         <div class="section-head">
             <div>
                 <h2>Loan history</h2>
-                <p th:text="|${#lists.size(borrows)} record${#lists.size(borrows) == 1 ? '' : 's'} on this page|">records</p>
+                <p th:text="|${#lists.size(borrows)} record${#lists.size(borrows) == 1 ? '' : 's'}|">records</p>
             </div>
         </div>
 
@@ -67,11 +60,10 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Reader ID</th>
-                    <th>Copy ID</th>
-                    <th>Borrowed</th>
-                    <th>Due</th>
-                    <th>Returned</th>
+                    <th>Reader</th>
+                    <th>Book copy</th>
+                    <th>Borrow date</th>
+                    <th>Due date</th>
                     <th>Status</th>
                     <th>Fine</th>
                     <th>Action</th>
@@ -80,35 +72,47 @@
                 <tbody>
                 <tr th:each="record : ${borrows}">
                     <td>#<span th:text="${record.borrowId}">1</span></td>
-                    <td th:text="${record.userId}">1</td>
-                    <td th:text="${record.copyId}">1</td>
+                    <td th:text="${record.user != null ? record.user.username : ('#' + record.userId)}">Reader</td>
+                    <td>
+                        <span th:text="${record.book != null ? record.book.title : ('Copy #' + record.copyId)}">Book</span>
+                        <span th:if="${record.copyNumber != null}" th:text="| · copy #${record.copyNumber}|"> · copy #1</span>
+                    </td>
                     <td th:text="${record.borrowDate}">date</td>
                     <td th:text="${record.dueDate}">date</td>
-                    <td th:text="${record.returnDate != null ? record.returnDate : '—'}">—</td>
-                    <td><span class="status" th:text="${record.status.name()}">STATUS</span></td>
-                    <td th:text="${record.fineAmount != null ? '$' + record.fineAmount : '$0'}">$0</td>
                     <td>
-                        <form th:if="${record.status.name() == 'REQUESTED'}" method="post"
-                              th:action="@{/librarian/borrows/approve/{id}(id=${record.borrowId})}"
-                              style="display:inline">
-                            <button type="submit" class="btn secondary small">✓ Approve</button>
+                        <span th:if="${record.status.name() == 'APPROVED'}" class="status">Active</span>
+                        <span th:if="${record.status.name() == 'REQUESTED'}" class="status pending">Pending</span>
+                        <span th:if="${record.status.name() == 'RETURN_REQUESTED'}" class="status pending">Return pending</span>
+                        <span th:if="${record.status.name() == 'RETURNED'}" class="status returned">Returned</span>
+                        <span th:if="${record.status.name() == 'REJECTED'}" class="status out">Rejected</span>
+                    </td>
+                    <td th:text="${record.fineAmount != null ? record.fineAmount + ' ₸' : '0 ₸'}">0 ₸</td>
+                    <td>
+                        <!-- Pending request: approve / reject -->
+                        <div th:if="${record.status.name() == 'REQUESTED'}" style="display:flex; gap:6px;">
+                            <form method="post" th:action="@{/librarian/borrows/approve/{id}(id=${record.borrowId})}" style="display:inline">
+                                <button type="submit" class="btn secondary small">✓ Approve</button>
+                            </form>
+                            <form method="post" th:action="@{/librarian/borrows/reject/{id}(id=${record.borrowId})}" style="display:inline">
+                                <button type="submit" class="btn ghost small" style="color: var(--danger);">✕ Reject</button>
+                            </form>
+                        </div>
+                        <!-- Active / return requested: register return with condition -->
+                        <form th:if="${record.status.name() == 'APPROVED' or record.status.name() == 'RETURN_REQUESTED'}"
+                              method="post" th:action="@{/librarian/borrows/return/{id}(id=${record.borrowId})}"
+                              style="display:flex; gap:6px; align-items:center;">
+                            <select name="condition" aria-label="Copy condition">
+                                <option th:each="c : ${conditions}" th:value="${c}" th:text="${c}"
+                                        th:selected="${c.name() == 'GOOD'}">GOOD</option>
+                            </select>
+                            <button type="submit" class="btn secondary small">Register return</button>
                         </form>
-                        <span th:unless="${record.status.name() == 'REQUESTED'}" style="color: var(--muted);">—</span>
+                        <span th:if="${record.status.name() == 'RETURNED' or record.status.name() == 'REJECTED'}"
+                              style="color: var(--muted);">—</span>
                     </td>
                 </tr>
                 </tbody>
             </table>
-        </div>
-
-        <!-- Pagination (prev/next; controller does not expose total count) -->
-        <div style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
-            <a th:if="${currentPage > 1}"
-               th:href="@{/librarian/borrows(page=${currentPage - 1})}"
-               class="btn ghost small">← Prev</a>
-            <span class="btn small" th:text="${currentPage}">1</span>
-            <a th:if="${#lists.size(borrows) == 20}"
-               th:href="@{/librarian/borrows(page=${currentPage + 1})}"
-               class="btn ghost small">Next →</a>
         </div>
     </main>
 </section>

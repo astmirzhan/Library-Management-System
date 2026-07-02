@@ -11,28 +11,7 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/admin/dashboard}">📊 Dashboard</a>
-            <a th:href="@{/admin/users}" class="active">👥 User management</a>
-            <a th:href="@{/librarian/books}">📖 Inventory</a>
-            <a th:href="@{/librarian/borrows}">📋 All borrows</a>
-            <a th:href="@{/catalog}">🔍 View catalog</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">A
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user.username}">User</strong>
-                    <small>Admin account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('users')}"></aside>
 
     <main class="main">
         <header class="topbar">
@@ -51,6 +30,35 @@
         <div th:if="${error}" class="panel"
              style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
              th:text="${error}"></div>
+
+        <!-- Add librarian -->
+        <div class="panel" style="padding: 20px; margin-bottom: 22px;">
+            <span class="eyebrow" style="color: var(--brand);">Staff</span>
+            <h2 style="margin: 6px 0 14px;">Add librarian</h2>
+            <form method="post" th:action="@{/admin/librarians}"
+                  style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items:end;">
+                <div>
+                    <label for="username" style="display:block; margin-bottom:6px;"><strong>Username</strong></label>
+                    <input type="text" id="username" name="username" required minlength="3">
+                </div>
+                <div>
+                    <label for="email" style="display:block; margin-bottom:6px;"><strong>Email</strong></label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="password" style="display:block; margin-bottom:6px;"><strong>Password</strong></label>
+                    <input type="password" id="password" name="password" required minlength="6">
+                </div>
+                <div>
+                    <label for="phoneNumber" style="display:block; margin-bottom:6px;"><strong>Phone</strong></label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber"
+                           maxlength="20" pattern="[0-9 +()-]{7,20}">
+                </div>
+                <button type="submit" class="btn" style="grid-column: 1 / -1; justify-self: start;">
+                    + Create librarian
+                </button>
+            </form>
+        </div>
 
         <div class="section-head">
             <div>
@@ -90,8 +98,8 @@
                     <td th:text="${u.registrationDate}">date</td>
                     <td th:text="${u.phoneNumber != null ? u.phoneNumber : '—'}">—</td>
                     <td>
-                        <span th:if="${u.userId == user.userId}" style="color: var(--muted);">You</span>
-                        <div th:unless="${u.userId == user.userId}" style="display:flex; gap:6px;">
+                        <!-- Admin may only manage LIBRARIAN accounts -->
+                        <div th:if="${u.role.name() == 'LIBRARIAN'}" style="display:flex; gap:6px;">
                             <form method="post"
                                   th:action="@{/admin/users/toggle/{id}(id=${u.userId})}"
                                   style="display:inline">
@@ -100,24 +108,31 @@
                             </form>
                             <form method="post"
                                   th:action="@{/admin/users/delete/{id}(id=${u.userId})}"
-                                  style="display:inline">
+                                  style="display:inline"
+                                  onsubmit="return confirm('Delete this librarian?');">
                                 <button type="submit" class="btn ghost small"
                                         style="color: var(--danger);">Delete</button>
                             </form>
                         </div>
+                        <span th:unless="${u.role.name() == 'LIBRARIAN'}" style="color: var(--muted);">—</span>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Pagination (prev/next; controller does not expose total count) -->
-        <div style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
+        <!-- Pagination -->
+        <div th:if="${totalPages > 1}"
+             style="margin-top: 32px; display: flex; gap: 8px; justify-content: center; align-items: center;">
             <a th:if="${currentPage > 1}"
                th:href="@{/admin/users(page=${currentPage - 1})}"
                class="btn ghost small">← Prev</a>
-            <span class="btn small" th:text="${currentPage}">1</span>
-            <a th:if="${#lists.size(users) == 20}"
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+                <a th:href="@{/admin/users(page=${i})}"
+                   th:text="${i}"
+                   th:class="${i == currentPage} ? 'btn small' : 'btn ghost small'">1</a>
+            </span>
+            <a th:if="${currentPage < totalPages}"
                th:href="@{/admin/users(page=${currentPage + 1})}"
                class="btn ghost small">Next →</a>
         </div>

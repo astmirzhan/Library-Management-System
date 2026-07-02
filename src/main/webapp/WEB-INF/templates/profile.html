@@ -11,26 +11,7 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/catalog}">📖 Book catalog</a>
-            <a th:href="@{/borrowings}">📋 My borrowed books</a>
-            <a th:href="@{/profile}" class="active">👤 My profile</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">MM
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user.username}">User</strong>
-                    <small th:text="${user.role.name() + ' account'}">Reader account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('profile')}"></aside>
 
     <main class="main">
         <header class="topbar">
@@ -49,38 +30,63 @@
              style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
              th:text="${error}"></div>
 
-        <div class="split-grid">
+        <div class="split-grid" style="align-items: start;">
             <!-- Read-only summary -->
-            <div class="panel" style="padding: 24px;">
-                <span class="eyebrow" style="color: var(--brand);">Account</span>
-                <h2 style="margin: 8px 0 16px;" th:text="${user.username}">username</h2>
-                <p style="margin: 0 0 8px;"><strong>Role:</strong>
-                    <span class="status" th:text="${user.role.name()}">ROLE</span></p>
-                <p style="margin: 0 0 8px;"><strong>Member since:</strong>
-                    <span th:text="${user.registrationDate}">date</span></p>
-                <p style="margin: 0;"><strong>User ID:</strong>
-                    #<span th:text="${user.userId}">0</span></p>
+            <div class="panel" style="padding: 28px;">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 22px;">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--brand);
+                                color: #fff; display: flex; align-items: center; justify-content: center;
+                                font-size: 24px; font-weight: 800;"
+                         th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">LI</div>
+                    <div>
+                        <h2 style="margin: 0;" th:text="${user.username}">username</h2>
+                        <span class="status" th:text="${user.role.name()}">ROLE</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; gap: 0;">
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
+                        <span style="color: var(--muted);">Email</span>
+                        <strong th:text="${user.email}">email</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
+                        <span style="color: var(--muted);">Phone</span>
+                        <strong th:text="${user.phoneNumber != null and !user.phoneNumber.isEmpty() ? user.phoneNumber : '—'}">—</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
+                        <span style="color: var(--muted);">Member since</span>
+                        <strong th:text="${user.registrationDate}">date</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--line, #e6e2d6);">
+                        <span style="color: var(--muted);">User ID</span>
+                        <strong>#<span th:text="${user.userId}">0</span></strong>
+                    </div>
+                </div>
             </div>
 
             <!-- Edit form -->
-            <div class="panel" style="padding: 24px;">
+            <div class="panel" style="padding: 28px;">
                 <span class="eyebrow" style="color: var(--brand);">Edit details</span>
+                <h2 style="margin: 6px 0 18px;">Update your info</h2>
                 <form method="post" th:action="@{/profile/update}"
-                      style="display: grid; gap: 14px; margin-top: 12px;">
+                      style="display: grid; gap: 16px;">
                     <div>
-                        <label for="username"><strong>Username</strong></label>
+                        <label for="username" style="display:block; margin-bottom:6px;"><strong>Username</strong></label>
                         <input type="text" id="username" name="username" required minlength="3"
                                th:value="${user.username}">
                     </div>
                     <div>
-                        <label for="email"><strong>Email</strong></label>
+                        <label for="email" style="display:block; margin-bottom:6px;"><strong>Email</strong></label>
                         <input type="email" id="email" name="email" required
                                th:value="${user.email}">
                     </div>
                     <div>
-                        <label for="phoneNumber"><strong>Phone number</strong></label>
-                        <input type="text" id="phoneNumber" name="phoneNumber"
-                               th:value="${user.phoneNumber}">
+                        <label for="phoneNumber" style="display:block; margin-bottom:6px;"><strong>Phone number</strong></label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber"
+                               th:value="${user.phoneNumber}"
+                               maxlength="20" pattern="[0-9 +()-]{7,20}"
+                               title="7 to 20 characters: digits and the symbols + - ( ) space"
+                               placeholder="+1-555-0100">
                     </div>
                     <button type="submit" class="btn" style="justify-self: start;">Save changes</button>
                 </form>

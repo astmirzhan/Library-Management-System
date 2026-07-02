@@ -11,27 +11,7 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/catalog}" class="active">📖 Book catalog</a>
-            <a th:href="@{/borrowings}">📋 My borrowed books</a>
-            <a th:href="@{/profile}">👤 My profile</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${user != null ? #strings.toUpperCase(#strings.substring(user.username, 0, 2)) : 'U'}">
-                    MM
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user != null ? user.username : 'Guest'}">User</strong>
-                    <small th:text="${user != null ? user.role.name() + ' account' : ''}">Reader</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('catalog')}"></aside>
 
     <main class="main">
         <header class="topbar">
@@ -52,9 +32,10 @@
             <div>
                 <div class="panel" style="padding: 0; overflow: hidden;">
                     <div class="cover"
-                         style="aspect-ratio: 3/4; border-radius: 0; padding: 40px;"
-                         th:style="|--cover: ${ {'#285c46','#e9a23b','#b84843','#3a5566','#8a5a0e','#5c7565'}[book.bookId % 6] }; aspect-ratio: 3/4; border-radius: 0; padding: 40px; display: flex; align-items: flex-end;|">
-                        <strong style="font-size: 26px; line-height: 1.15;" th:text="${book.title}">Title</strong>
+                         style="aspect-ratio: 3/4; border-radius: 0; padding: 24px;"
+                         th:style="|--cover: ${ {'#285c46','#e9a23b','#b84843','#3a5566','#8a5a0e','#5c7565'}[book.bookId % 6] }; aspect-ratio: 3/4; border-radius: 0; padding: 24px; display: flex; align-items: flex-end;|">
+                        <strong style="font-size: 22px; line-height: 1.2; overflow-wrap: break-word; word-break: break-word; hyphens: auto; max-width: 100%;"
+                                th:text="${book.title}">Title</strong>
                     </div>
                 </div>
             </div>
@@ -98,13 +79,19 @@
                     </span>
                 </div>
 
-                <form th:if="${book.availableCopies > 0}"
+                <form th:if="${book.availableCopies > 0 and user != null and user.role.name() == 'READER'}"
                       method="post"
                       th:action="@{/borrowings/request/{id}(id=${book.bookId})}"
-                      style="margin-top: 20px;">
+                      style="margin-top: 20px; display: grid; gap: 10px; max-width: 320px;">
+                    <label for="dueDate" style="font-weight: 700;">Borrow until</label>
+                    <input type="date" id="dueDate" name="dueDate" required
+                           th:min="${minDue}" th:max="${maxDue}" th:value="${defaultDue}">
                     <button type="submit" class="btn" style="padding: 14px 24px;">
                         📚 Request to borrow
                     </button>
+                    <small style="color: var(--muted);">
+                        Late fee: <strong th:text="${dailyFine}">1500</strong> ₸ per overdue day.
+                    </small>
                 </form>
             </div>
         </div>
@@ -118,7 +105,7 @@
         </div>
 
         <!-- Write a review (only borrowers can submit; rule enforced server-side) -->
-        <form th:if="${user != null}" method="post" th:action="@{/reviews}" class="panel"
+        <form th:if="${user != null and user.role.name() == 'READER'}" method="post" th:action="@{/reviews}" class="panel"
               style="padding: 18px; margin-bottom: 16px; display: grid; gap: 10px;">
             <input type="hidden" name="bookId" th:value="${book.bookId}">
             <div>
@@ -143,7 +130,7 @@
         <div th:if="${not #lists.isEmpty(reviews)}" style="display: grid; gap: 12px;">
             <div class="panel" style="padding: 18px;" th:each="review : ${reviews}">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <strong>User #<span th:text="${review.userId}">1</span></strong>
+                    <strong th:text="${review.user != null ? review.user.username : ('User #' + review.userId)}">User</strong>
                     <span>
                         <span th:each="i : ${#numbers.sequence(1, review.rating)}">⭐</span>
                     </span>

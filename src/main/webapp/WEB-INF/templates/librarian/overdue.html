@@ -11,28 +11,7 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/librarian/dashboard}">📊 Dashboard</a>
-            <a th:href="@{/librarian/books}">📖 Book inventory</a>
-            <a th:href="@{/librarian/borrows}">📋 Borrowing records</a>
-            <a th:href="@{/librarian/overdue}" class="active">⏰ Overdue</a>
-            <a th:href="@{/catalog}">🔍 View catalog</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">L
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user.username}">User</strong>
-                    <small th:text="${user.role.name() + ' account'}">Librarian account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('overdue')}"></aside>
 
     <main class="main">
         <header class="topbar">

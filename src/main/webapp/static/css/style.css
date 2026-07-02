@@ -59,6 +59,7 @@ button {
     background: var(--brand);
     color: white;
     font-weight: 800;
+    text-decoration: none;
     transition: .2s ease;
     display: inline-flex;
     align-items: center;
@@ -580,8 +581,11 @@ textarea:focus {
 .cover strong {
     position: relative;
     z-index: 1;
-    max-width: 85%;
-    font: 700 24px/1.05 Georgia, serif;
+    max-width: 100%;
+    font: 700 22px/1.15 Georgia, serif;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .book-info {

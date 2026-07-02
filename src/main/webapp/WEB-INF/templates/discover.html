@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Discover · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}">
+</head>
+<body>
+<section id="appView">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <nav class="nav">
+            <a th:href="@{/discover}" class="active">🏠 Discover</a>
+            <a th:href="@{/catalog}">📖 Book catalog</a>
+            <a th:href="@{/borrowings}">📋 My borrowed books</a>
+            <a th:href="@{/reviews/my}">⭐ My reviews</a>
+            <a th:href="@{/profile}">👤 My profile</a>
+        </nav>
+        <div class="user-chip">
+            <div class="user-row">
+                <div class="avatar"
+                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">MM
+                </div>
+                <div class="user-meta">
+                    <strong th:text="${user.username}">User</strong>
+                    <small th:text="${user.role.name() + ' account'}">Reader account</small>
+                </div>
+                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="top-actions">
+                <div class="page-title">
+                    <h1 th:text="|Welcome back, ${user.username}!|">Welcome back!</h1>
+                    <p>Discover available books to borrow.</p>
+                </div>
+            </div>
+            <div class="top-actions">
+                <a th:href="@{/catalog}" class="btn">Full catalog</a>
+            </div>
+        </header>
+
+        <!-- Banner -->
+        <div class="admin-banner panel">
+            <div>
+                <h2>Find your next read</h2>
+                <p>Browse the collection, borrow books and share your reviews.</p>
+            </div>
+            <a th:href="@{/catalog}" class="btn">Explore catalog</a>
+        </div>
+
+        <div class="section-head">
+            <div>
+                <h2>Available now</h2>
+                <p>Popular titles ready to borrow.</p>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(books)}" class="panel empty">
+            No books available right now.
+        </div>
+
+        <div class="book-grid" th:if="${not #lists.isEmpty(books)}">
+            <article class="panel book-card" th:each="book : ${books}">
+                <div class="cover"
+                     th:style="|--cover: ${ {'#285c46','#e9a23b','#b84843','#3a5566','#8a5a0e','#5c7565'}[book.bookId % 6] }|">
+                    <strong th:text="${book.title}">Title</strong>
+                </div>
+                <div class="book-info">
+                    <h3 th:text="${book.title}">Title</h3>
+                    <p>
+                        <span th:if="${not #lists.isEmpty(book.authors)}"
+                              th:text="${book.authors[0].fullName}">Author</span>
+                        <span th:text="| · ${book.publicationYear}|">Year</span>
+                    </p>
+                    <div class="book-foot">
+                        <span class="status">
+                            <span th:text="${book.availableCopies}">2</span> available
+                        </span>
+                        <a th:href="@{/catalog/{id}(id=${book.bookId})}" class="btn ghost small">Details</a>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </main>
+</section>
+</body>
+</html>

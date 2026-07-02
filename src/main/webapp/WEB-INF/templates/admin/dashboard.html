@@ -11,35 +11,14 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/admin/dashboard}" class="active">📊 Dashboard</a>
-            <a th:href="@{/admin/users}">👥 User management</a>
-            <a th:href="@{/librarian/books}">📖 Inventory</a>
-            <a th:href="@{/librarian/borrows}">📋 All borrows</a>
-            <a th:href="@{/catalog}">🔍 View catalog</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">A
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user.username}">User</strong>
-                    <small>Admin account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></aside>
 
     <main class="main">
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
-                    <h1>Admin dashboard</h1>
-                    <p>System overview and statistics.</p>
+                    <h1>Advanced dashboard</h1>
+                    <p>System-wide statistics and analytics.</p>
                 </div>
             </div>
             <div class="top-actions">
@@ -50,10 +29,10 @@
         <!-- Banner -->
         <div class="admin-banner panel">
             <div>
-                <h2>System health</h2>
-                <p>Monitor all aspects of the library system.</p>
+                <h2>Advanced dashboard</h2>
+                <p>Full system overview for users, loans, reviews and fines.</p>
             </div>
-            <a th:href="@{/admin/users}" class="btn">Open user manager</a>
+            <a th:href="@{/admin/users}" class="btn">Manage users</a>
         </div>
 
         <!-- Stats -->
@@ -61,52 +40,95 @@
             <div class="panel stat">
                 <span>Users</span>
                 <strong th:text="${userCount}">0</strong>
-                <small>Total registered</small>
+                <small>Readers and staff</small>
             </div>
             <div class="panel stat">
-                <span>Books</span>
-                <strong th:text="${bookCount}">0</strong>
-                <small>Titles in catalog</small>
+                <span>Popular title</span>
+                <strong style="font-size: 20px; line-height: 1.2;" th:text="${popularTitle}">—</strong>
+                <small>By active + historical loans</small>
             </div>
             <div class="panel stat">
-                <span>Pending</span>
-                <strong th:text="${pendingCount}">0</strong>
-                <small>Borrow requests</small>
+                <span>Total fines</span>
+                <strong th:text="${totalFines} + ' ₸'">0 ₸</strong>
+                <small>Financial report base</small>
             </div>
             <div class="panel stat">
-                <span>Overdue</span>
-                <strong th:text="${overdueCount}">0</strong>
-                <small style="color: var(--danger);">Require action</small>
+                <span>Reviews</span>
+                <strong th:text="${reviewCount}">0</strong>
+                <small>Total in system</small>
             </div>
         </div>
 
-        <!-- Quick actions -->
-        <div class="section-head">
+        <!-- Most borrowed + quick stats -->
+        <div class="split-grid" style="align-items: start;">
             <div>
-                <h2>Quick actions</h2>
-                <p>Manage library operations.</p>
+                <div class="section-head">
+                    <div>
+                        <h2>Most borrowed books</h2>
+                        <p>Operational ranking for the dashboard.</p>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(mostBorrowed)}" class="panel empty">
+                    No borrowing data yet.
+                </div>
+                <div th:if="${not #lists.isEmpty(mostBorrowed)}" class="panel table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>#</th><th>Title</th><th>Loans</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row, it : ${mostBorrowed}">
+                            <td th:text="${it.count}">1</td>
+                            <td th:text="${row[0]}">Title</td>
+                            <td><strong th:text="${row[1]}">0</strong></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-head">
+                    <div>
+                        <h2>System snapshot</h2>
+                        <p>Books, catalog and overdue status.</p>
+                    </div>
+                </div>
+                <div class="panel" style="padding: 20px; display: grid; gap: 14px;">
+                    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line,#e6e2d6);">
+                        <span style="color:var(--muted);">Titles in catalog</span>
+                        <strong th:text="${bookCount}">0</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line,#e6e2d6);">
+                        <span style="color:var(--muted);">Overdue loans</span>
+                        <strong style="color: var(--danger);" th:text="${overdueCount}">0</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:10px 0;">
+                        <span style="color:var(--muted);">Total fines collected base</span>
+                        <strong th:text="${totalFines} + ' ₸'">0 ₸</strong>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="split-grid">
-            <a th:href="@{/admin/users}" class="panel"
-               style="padding: 24px; text-decoration: none; color: var(--ink); display: block;">
-                <span class="eyebrow" style="color: var(--brand);">User management</span>
-                <h3 style="margin: 8px 0;">Manage users</h3>
-                <p style="color: var(--muted); margin: 0;">Add, edit, or delete user accounts.</p>
-            </a>
-            <a th:href="@{/librarian/books}" class="panel"
-               style="padding: 24px; text-decoration: none; color: var(--ink); display: block;">
-                <span class="eyebrow" style="color: var(--brand);">Inventory</span>
-                <h3 style="margin: 8px 0;">Manage books</h3>
-                <p style="color: var(--muted); margin: 0;">Add, edit, or remove books from catalog.</p>
-            </a>
-            <a th:href="@{/librarian/borrows}" class="panel"
-               style="padding: 24px; text-decoration: none; color: var(--ink); display: block;">
-                <span class="eyebrow" style="color: var(--brand);">Borrowing</span>
-                <h3 style="margin: 8px 0;">All borrow records</h3>
-                <p style="color: var(--muted); margin: 0;">View all loans across the library.</p>
-            </a>
+        <!-- Overdue chart -->
+        <div class="section-head" style="margin-top: 8px;">
+            <div>
+                <h2>Overdue borrowings chart</h2>
+                <p th:text="|Overdue books per month (${chartYear})|">Overdue per month</p>
+            </div>
+        </div>
+        <div class="panel" style="padding: 24px;">
+            <div style="display:flex; align-items:flex-end; gap:14px; height:220px;">
+                <div th:each="row : ${overdueChart}"
+                     style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;">
+                    <strong th:text="${row[1]}" style="margin-bottom:6px;">0</strong>
+                    <div th:style="|width:100%; max-width:46px; border-radius:8px 8px 0 0;
+                                    background: var(--brand);
+                                    height: ${ row[1] == 0 ? 3 : (row[1] * 170 / overdueChartMax) }px;|"></div>
+                    <small style="color:var(--muted); margin-top:8px;" th:text="${row[0]}">Mon</small>
+                </div>
+            </div>
         </div>
     </main>
 </section>

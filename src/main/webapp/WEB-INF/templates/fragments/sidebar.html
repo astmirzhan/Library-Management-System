@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  Role-aware sidebar fragment.
+  Usage: <aside th:replace="~{fragments/sidebar :: sidebar('catalog')}"></aside>
+  The 'active' argument marks the current nav item.
+-->
+<aside class="sidebar" th:fragment="sidebar(active)">
+    <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+    <nav class="nav">
+        <!-- READER -->
+        <th:block th:if="${user.role.name() == 'READER'}">
+            <a th:href="@{/discover}" th:classappend="${active == 'discover'} ? 'active'">🏠 Discover</a>
+            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">📖 Book catalog</a>
+            <a th:href="@{/borrowings}" th:classappend="${active == 'borrowings'} ? 'active'">📋 My borrowed books</a>
+            <a th:href="@{/reviews/my}" th:classappend="${active == 'reviews'} ? 'active'">⭐ My reviews</a>
+            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 My profile</a>
+        </th:block>
+        <!-- LIBRARIAN -->
+        <th:block th:if="${user.role.name() == 'LIBRARIAN'}">
+            <a th:href="@{/librarian/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">📊 Dashboard</a>
+            <a th:href="@{/librarian/books}" th:classappend="${active == 'books'} ? 'active'">📖 Book inventory</a>
+            <a th:href="@{/librarian/borrows}" th:classappend="${active == 'borrows'} ? 'active'">📋 Borrowing records</a>
+            <a th:href="@{/librarian/overdue}" th:classappend="${active == 'overdue'} ? 'active'">⏰ Overdue</a>
+            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">🔍 View catalog</a>
+            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 My profile</a>
+        </th:block>
+        <!-- ADMIN -->
+        <th:block th:if="${user.role.name() == 'ADMIN'}">
+            <a th:href="@{/admin/dashboard}" th:classappend="${active == 'dashboard'} ? 'active'">📊 Dashboard</a>
+            <a th:href="@{/admin/users}" th:classappend="${active == 'users'} ? 'active'">👥 User management</a>
+            <a th:href="@{/librarian/books}" th:classappend="${active == 'books'} ? 'active'">📖 Inventory</a>
+            <a th:href="@{/catalog}" th:classappend="${active == 'catalog'} ? 'active'">🔍 View catalog</a>
+            <a th:href="@{/profile}" th:classappend="${active == 'profile'} ? 'active'">👤 My profile</a>
+        </th:block>
+    </nav>
+    <div class="user-chip">
+        <div class="user-row">
+            <div class="avatar"
+                 th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">MM
+            </div>
+            <div class="user-meta">
+                <strong th:text="${user.username}">User</strong>
+                <small th:text="${user.role.name() + ' account'}">account</small>
+            </div>
+            <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+        </div>
+    </div>
+</aside>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Reviews · Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css" th:href="@{/css/style.css}">
+</head>
+<body>
+<section id="appView">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
+        <nav class="nav">
+            <a th:href="@{/discover}">🏠 Discover</a>
+            <a th:href="@{/catalog}">📖 Book catalog</a>
+            <a th:href="@{/borrowings}">📋 My borrowed books</a>
+            <a th:href="@{/reviews/my}" class="active">⭐ My reviews</a>
+            <a th:href="@{/profile}">👤 My profile</a>
+        </nav>
+        <div class="user-chip">
+            <div class="user-row">
+                <div class="avatar"
+                     th:text="${#strings.toUpperCase(#strings.substring(user.username, 0, 2))}">MM
+                </div>
+                <div class="user-meta">
+                    <strong th:text="${user.username}">User</strong>
+                    <small th:text="${user.role.name() + ' account'}">Reader account</small>
+                </div>
+                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="top-actions">
+                <div class="page-title">
+                    <h1>My reviews</h1>
+                    <p>Ratings and comments you left on books.</p>
+                </div>
+            </div>
+        </header>
+
+        <div th:if="${success}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:var(--brand-2); color:var(--brand); border-color:var(--brand);"
+             th:text="${success}"></div>
+        <div th:if="${error}" class="panel"
+             style="margin-bottom:20px; padding:14px 18px; background:#f7e2e0; color:var(--danger);"
+             th:text="${error}"></div>
+
+        <div class="section-head">
+            <div>
+                <h2>Your reviews</h2>
+                <p th:text="|${#lists.size(reviews)} review${#lists.size(reviews) == 1 ? '' : 's'}|">reviews</p>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(reviews)}" class="panel empty">
+            You haven't written any reviews yet.
+        </div>
+
+        <div th:if="${not #lists.isEmpty(reviews)}" style="display: grid; gap: 12px;">
+            <div class="panel" style="padding: 18px;" th:each="review : ${reviews}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <a th:if="${review.book != null}"
+                       th:href="@{/catalog/{id}(id=${review.book.bookId})}"
+                       th:text="${review.book.title}"
+                       style="font-weight: 800; color: var(--brand); text-decoration: none;">Book title</a>
+                    <span th:unless="${review.book != null}" style="font-weight: 800;">Book #<span th:text="${review.bookId}">1</span></span>
+                    <span>
+                        <span th:each="i : ${#numbers.sequence(1, review.rating)}">⭐</span>
+                    </span>
+                </div>
+                <!-- Edit form -->
+                <form method="post" th:action="@{/reviews/update/{id}(id=${review.reviewId})}"
+                      style="display: grid; gap: 8px; margin: 6px 0 4px;">
+                    <select name="rating" aria-label="Rating">
+                        <option value="5" th:selected="${review.rating == 5}">★★★★★ (5)</option>
+                        <option value="4" th:selected="${review.rating == 4}">★★★★ (4)</option>
+                        <option value="3" th:selected="${review.rating == 3}">★★★ (3)</option>
+                        <option value="2" th:selected="${review.rating == 2}">★★ (2)</option>
+                        <option value="1" th:selected="${review.rating == 1}">★ (1)</option>
+                    </select>
+                    <textarea name="comment" rows="2" required th:text="${review.comment}">Comment</textarea>
+                    <button type="submit" class="btn small" style="justify-self: start;">Save changes</button>
+                </form>
+                <small style="color: var(--muted);" th:text="${review.createdDate}">date</small>
+            </div>
+        </div>
+    </main>
+</section>
+</body>
+</html>

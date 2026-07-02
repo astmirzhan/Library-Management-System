@@ -11,27 +11,7 @@
 </head>
 <body>
 <section id="appView">
-    <aside class="sidebar">
-        <div class="brand"><span class="brand-mark">⌁</span> Library</div>
-        <nav class="nav">
-            <a th:href="@{/catalog}" class="active">📖 Book catalog</a>
-            <a th:href="@{/borrowings}">📋 My borrowed books</a>
-            <a th:href="@{/profile}">👤 My profile</a>
-        </nav>
-        <div class="user-chip">
-            <div class="user-row">
-                <div class="avatar"
-                     th:text="${user != null ? #strings.toUpperCase(#strings.substring(user.username, 0, 2)) : 'U'}">
-                    MM
-                </div>
-                <div class="user-meta">
-                    <strong th:text="${user != null ? user.username : 'Guest'}">User</strong>
-                    <small th:text="${user != null ? user.role.name() + ' account' : ''}">Reader account</small>
-                </div>
-                <a th:href="@{/logout}" class="logout" title="Sign out">↪</a>
-            </div>
-        </div>
-    </aside>
+    <aside th:replace="~{fragments/sidebar :: sidebar('catalog')}"></aside>
 
     <main class="main">
         <header class="topbar">
@@ -70,6 +50,14 @@
                         th:value="${genre.genreId}"
                         th:text="${genre.name}"
                         th:selected="${genre.genreId == selectedGenreId}">Genre
+                </option>
+            </select>
+            <select name="authorId" onchange="this.form.submit()" aria-label="Filter by author">
+                <option value="">All authors</option>
+                <option th:each="author : ${authors}"
+                        th:value="${author.authorId}"
+                        th:text="${author.fullName}"
+                        th:selected="${author.authorId == selectedAuthorId}">Author
                 </option>
             </select>
             <select name="availability" onchange="this.form.submit()" aria-label="Filter by availability">

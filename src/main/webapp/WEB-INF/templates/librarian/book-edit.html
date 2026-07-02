@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add Book · Library</title>
+    <title>Edit Book · Library</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,8 +17,8 @@
         <header class="topbar">
             <div class="top-actions">
                 <div class="page-title">
-                    <h1>Add new book</h1>
-                    <p>Create a catalog entry and its physical copies.</p>
+                    <h1>Edit book</h1>
+                    <p>Update catalog details for this title.</p>
                 </div>
             </div>
             <div class="top-actions">
@@ -31,44 +31,32 @@
              th:text="${error}"></div>
 
         <div class="panel" style="padding: 24px; max-width: 640px;">
-            <form method="post" th:action="@{/librarian/books}" style="display: grid; gap: 14px;">
+            <form method="post" th:action="@{/librarian/books/{id}/edit(id=${book.bookId})}"
+                  style="display: grid; gap: 14px;">
                 <div>
                     <label for="title"><strong>Title</strong></label>
-                    <input type="text" id="title" name="title" required>
+                    <input type="text" id="title" name="title" required th:value="${book.title}">
                 </div>
                 <div>
                     <label for="isbn"><strong>ISBN</strong></label>
-                    <input type="text" id="isbn" name="isbn" required>
+                    <input type="text" id="isbn" name="isbn" required th:value="${book.isbn}">
                 </div>
                 <div>
                     <label for="publicationYear"><strong>Publication year</strong></label>
                     <input type="number" id="publicationYear" name="publicationYear"
-                           min="1000" max="2100" required>
-                </div>
-                <div>
-                    <label for="copies"><strong>Number of copies</strong></label>
-                    <input type="number" id="copies" name="copies" min="1" max="100" value="1" required>
+                           min="1000" max="2100" required th:value="${book.publicationYear}">
                 </div>
                 <div>
                     <label for="description"><strong>Description</strong></label>
                     <textarea id="description" name="description" rows="3"
-                              placeholder="Short description of the book…"></textarea>
+                              th:text="${book.description}"></textarea>
                 </div>
-                <div>
-                    <label for="authorIds"><strong>Authors</strong> (Ctrl/Cmd to select multiple)</label>
-                    <select id="authorIds" name="authorIds" multiple size="4">
-                        <option th:each="a : ${authors}" th:value="${a.authorId}"
-                                th:text="${a.fullName}">Author</option>
-                    </select>
+                <div style="color: var(--muted);">
+                    Copies: <strong th:text="${book.totalCopies}">0</strong> total,
+                    <strong th:text="${book.availableCopies}">0</strong> available
+                    (manage copies from the inventory page).
                 </div>
-                <div>
-                    <label for="genreIds"><strong>Genres</strong> (Ctrl/Cmd to select multiple)</label>
-                    <select id="genreIds" name="genreIds" multiple size="4">
-                        <option th:each="g : ${genres}" th:value="${g.genreId}"
-                                th:text="${g.name}">Genre</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn" style="justify-self: start;">Create book</button>
+                <button type="submit" class="btn" style="justify-self: start;">Save changes</button>
             </form>
         </div>
     </main>
