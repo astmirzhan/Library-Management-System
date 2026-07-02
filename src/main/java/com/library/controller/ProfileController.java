@@ -53,6 +53,16 @@ public class ProfileController {
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         User current = (User) session.getAttribute("currentUser");
+
+        if (phoneNumber != null && !phoneNumber.trim().isEmpty()) {
+            String phone = phoneNumber.trim();
+            if (!phone.matches("[0-9 +()-]{7,20}")) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Invalid phone number: 7–20 characters, digits and + - ( ) space only");
+                return "redirect:/profile";
+            }
+        }
+
         try {
             Optional<User> opt = userService.findById(current.getUserId());
             if (opt.isEmpty()) {
