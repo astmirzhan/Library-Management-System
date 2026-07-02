@@ -11,7 +11,7 @@ import java.util.Objects;
 public class BorrowRecord {
 
     public enum Status {
-        REQUESTED, APPROVED, RETURNED
+        REQUESTED, APPROVED, RETURNED, RETURN_REQUESTED, REJECTED
     }
 
     private int borrowId;
@@ -27,6 +27,8 @@ public class BorrowRecord {
     private LocalDate approvalDate;
 
     private User user;
+    private Book book;
+    private Integer copyNumber;
 
     public BorrowRecord() {
         this.fineAmount = BigDecimal.ZERO;
@@ -145,6 +147,22 @@ public class BorrowRecord {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Book getBook() {
+        return book;
+    }
+
+    public void setBook(Book book) {
+        this.book = book;
+    }
+
+    public Integer getCopyNumber() {
+        return copyNumber;
+    }
+
+    public void setCopyNumber(Integer copyNumber) {
+        this.copyNumber = copyNumber;
     }
 
     public boolean isActive() {

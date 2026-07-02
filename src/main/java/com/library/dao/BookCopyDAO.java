@@ -143,7 +143,7 @@ public class BookCopyDAO implements BaseDAO<BookCopy, Integer> {
                 "AND bc.copy_id NOT IN ( " +
                 "    SELECT br.copy_id FROM borrow_record br " +
                 "    WHERE br.return_date IS NULL " +
-                "    AND br.status IN ('REQUESTED', 'APPROVED') " +
+                "    AND br.status IN ('REQUESTED', 'APPROVED', 'RETURN_REQUESTED') " +
                 ") " +
                 "LIMIT 1";
 
@@ -198,6 +198,47 @@ public class BookCopyDAO implements BaseDAO<BookCopy, Integer> {
             logger.error("Failed to delete book copy: {}", copyId, e);
             throw e;
         }
+    }
+
+    /**
+     * Returns the total number of physical copies.
+     *
+     * @return total copy count
+     * @throws SQLException if database error occurs
+     */
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM book_copy";
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            logger.error("Failed to count copies", e);
+            throw e;
+        }
+        return 0;
+    }
+
+    /**
+     * Counts copies in a given condition (e.g. DAMAGED, WORN).
+     *
+     * @param condition the copy condition
+     * @return matching copy count
+     * @throws SQLException if database error occurs
+     */
+    public int countByCondition(BookCopy.Condition condition) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM book_copy WHERE condition = ?::copy_condition";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, condition.name());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to count copies by condition: {}", condition, e);
+            throw e;
+        }
+        return 0;
     }
 
     private BookCopy mapResultSet(ResultSet rs) throws SQLException {
