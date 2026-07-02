@@ -21,7 +21,7 @@ import java.util.Optional;
 public class GenreDAOImpl implements GenreDAO {
 
     private static final Logger logger = LogManager.getLogger(GenreDAOImpl.class);
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
 
     public GenreDAOImpl() {
         this.dbConnection = DatabaseConnection.getInstance();

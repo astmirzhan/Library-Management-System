@@ -22,7 +22,7 @@ import java.util.Optional;
 public class ReviewDAOImpl implements ReviewDAO {
 
     private static final Logger logger = LogManager.getLogger(ReviewDAOImpl.class);
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
 
     public ReviewDAOImpl() {
         this.dbConnection = DatabaseConnection.getInstance();

@@ -24,7 +24,7 @@ public class BookDAOImpl implements BookDAO {
 
     private static final Logger logger = LogManager.getLogger(BookDAOImpl.class);
     private static final int DEFAULT_LIMIT = 100;
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
     private final AuthorDAO authorDAO;
     private final GenreDAO genreDAO;
 

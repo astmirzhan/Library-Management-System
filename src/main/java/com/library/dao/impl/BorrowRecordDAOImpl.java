@@ -24,7 +24,7 @@ public class BorrowRecordDAOImpl implements BorrowRecordDAO {
 
     private static final Logger logger = LogManager.getLogger(BorrowRecordDAOImpl.class);
     private static final int DEFAULT_LIMIT = 100;
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
 
     public BorrowRecordDAOImpl() {
         this.dbConnection = DatabaseConnection.getInstance();

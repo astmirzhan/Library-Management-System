@@ -22,7 +22,7 @@ import java.util.Optional;
 public class BookCopyDAOImpl implements BookCopyDAO {
 
     private static final Logger logger = LogManager.getLogger(BookCopyDAOImpl.class);
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
 
     public BookCopyDAOImpl() {
         this.dbConnection = DatabaseConnection.getInstance();

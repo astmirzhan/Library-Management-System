@@ -22,7 +22,7 @@ import java.util.UUID;
 public class PublisherDAOImpl implements PublisherDAO {
 
     private static final Logger logger = LogManager.getLogger(PublisherDAOImpl.class);
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
 
     public PublisherDAOImpl() {
         this.dbConnection = DatabaseConnection.getInstance();

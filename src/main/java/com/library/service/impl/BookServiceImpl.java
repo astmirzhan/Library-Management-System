@@ -37,7 +37,7 @@ public class BookServiceImpl implements BookService {
 
     @Autowired
     public BookServiceImpl(BookDAO bookDAO, AuthorDAO authorDAO, GenreDAO genreDAO,
-                       BookCopyDAO bookCopyDAO, BorrowRecordDAO borrowDAO) {
+                           BookCopyDAO bookCopyDAO, BorrowRecordDAO borrowDAO) {
         this.bookDAO = bookDAO;
         this.authorDAO = authorDAO;
         this.genreDAO = genreDAO;
@@ -50,8 +50,8 @@ public class BookServiceImpl implements BookService {
      * Sets total/available copies to the requested count and inserts copy rows.
      *
      * @param book      the book to create
-     * @param authorIds author IDs to link (may be null)
-     * @param genreIds  genre IDs to link (may be null)
+     * @param authorIds author IDs to link (maybe null)
+     * @param genreIds  genre IDs to link (maybe null)
      * @param copies    number of physical copies to create
      * @return the saved book
      * @throws SQLException if database error occurs
@@ -258,7 +258,7 @@ public class BookServiceImpl implements BookService {
      * @param title       new title
      * @param isbn        new ISBN
      * @param year        new publication year
-     * @param description new description (may be null)
+     * @param description new description (maybe null)
      * @return true if updated
      * @throws SQLException             if database error occurs
      * @throws IllegalArgumentException if book not found or validation fails

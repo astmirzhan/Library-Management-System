@@ -23,7 +23,7 @@ public class UserDAOImpl implements UserDAO {
 
     private static final Logger logger = LogManager.getLogger(UserDAOImpl.class);
     private static final int DEFAULT_LIMIT = 100;
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
 
     public UserDAOImpl() {
         this.dbConnection = DatabaseConnection.getInstance();

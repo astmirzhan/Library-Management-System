@@ -21,7 +21,7 @@ import java.util.Optional;
 public class AuthorDAOImpl implements AuthorDAO {
 
     private static final Logger logger = LogManager.getLogger(AuthorDAOImpl.class);
-    private final DatabaseConnection dbConnection;
+    private DatabaseConnection dbConnection;
 
     public AuthorDAOImpl() {
         this.dbConnection = DatabaseConnection.getInstance();
