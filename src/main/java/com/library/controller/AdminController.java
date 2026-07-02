@@ -3,6 +3,7 @@ package com.library.controller;
 import com.library.model.User;
 import com.library.service.BookService;
 import com.library.service.BorrowService;
+import com.library.service.ReviewService;
 import com.library.service.UserService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,11 +19,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Controller for admin operations: user management, statistics, reports.
+ * Controller for admin operations: analytics dashboard, user management, reports.
  */
 @Controller
 @RequestMapping("/admin")
@@ -30,36 +33,55 @@ public class AdminController {
 
     private static final Logger logger = LogManager.getLogger(AdminController.class);
     private static final int PAGE_SIZE = 20;
+    private static final String[] MONTHS =
+            {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
     private final UserService userService;
     private final BookService bookService;
     private final BorrowService borrowService;
+    private final ReviewService reviewService;
 
     @Autowired
     public AdminController(UserService userService, BookService bookService,
-                           BorrowService borrowService) {
+                           BorrowService borrowService, ReviewService reviewService) {
         this.userService = userService;
         this.bookService = bookService;
         this.borrowService = borrowService;
+        this.reviewService = reviewService;
     }
 
     /**
-     * Admin dashboard with statistics.
+     * Advanced admin dashboard: system-wide statistics and analytics.
      */
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session) {
         try {
-            int userCount = userService.getUserCount();
-            int bookCount = bookService.getBookCount();
-            int overdueCount = borrowService.getOverdueRecords().size();
-            int pendingCount = borrowService.getPendingRequests().size();
+            model.addAttribute("userCount", userService.getUserCount());
+            model.addAttribute("bookCount", bookService.getBookCount());
+            model.addAttribute("overdueCount", borrowService.getOverdueRecords().size());
+            model.addAttribute("totalFines", borrowService.getTotalFines());
+            model.addAttribute("reviewCount", reviewService.getReviewCount());
 
-            model.addAttribute("userCount", userCount);
-            model.addAttribute("bookCount", bookCount);
-            model.addAttribute("overdueCount", overdueCount);
-            model.addAttribute("pendingCount", pendingCount);
+            // Most borrowed books (top 5) + most popular title
+            List<Object[]> mostBorrowed = borrowService.getMostBorrowedBooks(5);
+            model.addAttribute("mostBorrowed", mostBorrowed);
+            model.addAttribute("popularTitle",
+                    mostBorrowed.isEmpty() ? "—" : (String) mostBorrowed.get(0)[0]);
+
+            // Monthly overdue chart for the current year
+            int year = LocalDate.now().getYear();
+            int[] monthly = borrowService.getOverdueCountsByMonth(year);
+            List<Object[]> chart = new ArrayList<>();
+            int max = 1;
+            for (int m = 1; m <= 12; m++) {
+                chart.add(new Object[]{MONTHS[m], monthly[m]});
+                if (monthly[m] > max) max = monthly[m];
+            }
+            model.addAttribute("overdueChart", chart);
+            model.addAttribute("overdueChartMax", max);
+            model.addAttribute("chartYear", year);
+
             model.addAttribute("user", session.getAttribute("currentUser"));
-
             return "admin/dashboard";
         } catch (SQLException e) {
             logger.error("Failed to load admin dashboard", e);
@@ -75,8 +97,10 @@ public class AdminController {
                         Model model, HttpSession session) {
         try {
             List<User> users = userService.getAllUsers(page, PAGE_SIZE);
+            int totalPages = (int) Math.ceil((double) userService.getUserCount() / PAGE_SIZE);
             model.addAttribute("users", users);
             model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", totalPages);
             model.addAttribute("user", session.getAttribute("currentUser"));
             return "admin/users";
         } catch (SQLException e) {
@@ -86,26 +110,27 @@ public class AdminController {
     }
 
     /**
-     * Deletes a user.
-     * Note: An admin cannot delete other admins.
+     * Blocks/activates a user. Admin may only manage LIBRARIAN accounts.
      */
     @PostMapping("/users/toggle/{userId}")
     public String toggleActive(@PathVariable int userId,
                                HttpSession session,
                                RedirectAttributes redirectAttributes) {
-        User currentUser = (User) session.getAttribute("currentUser");
-        if (currentUser.getUserId() == userId) {
-            redirectAttributes.addFlashAttribute("error", "You cannot block yourself");
-            return "redirect:/admin/users";
-        }
         try {
             Optional<User> opt = userService.findById(userId);
-            if (opt.isPresent()) {
-                boolean newState = !opt.get().isActive();
-                userService.setUserActive(userId, newState);
-                redirectAttributes.addFlashAttribute("success",
-                        newState ? "User activated" : "User blocked");
+            if (opt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "User not found");
+                return "redirect:/admin/users";
             }
+            if (opt.get().getRole() != User.Role.LIBRARIAN) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Admin can only block or activate librarian accounts");
+                return "redirect:/admin/users";
+            }
+            boolean newState = !opt.get().isActive();
+            userService.setUserActive(userId, newState);
+            redirectAttributes.addFlashAttribute("success",
+                    newState ? "Librarian activated" : "Librarian blocked");
         } catch (Exception e) {
             logger.error("Failed to toggle user {}", userId, e);
             redirectAttributes.addFlashAttribute("error", "Failed to update user status");
@@ -113,24 +138,50 @@ public class AdminController {
         return "redirect:/admin/users";
     }
 
+    /**
+     * Deletes a user. Admin may only delete LIBRARIAN accounts.
+     */
     @PostMapping("/users/delete/{userId}")
     public String deleteUser(@PathVariable int userId,
-                             HttpSession session,
                              RedirectAttributes redirectAttributes) {
-        User currentUser = (User) session.getAttribute("currentUser");
-        if (currentUser.getUserId() == userId) {
-            redirectAttributes.addFlashAttribute("error", "You cannot delete yourself");
-            return "redirect:/admin/users";
-        }
-
         try {
-            boolean deleted = userService.deleteUser(userId);
-            if (deleted) {
-                redirectAttributes.addFlashAttribute("success", "User deleted");
+            Optional<User> opt = userService.findById(userId);
+            if (opt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "User not found");
+                return "redirect:/admin/users";
             }
+            if (opt.get().getRole() != User.Role.LIBRARIAN) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Admin can only delete librarian accounts");
+                return "redirect:/admin/users";
+            }
+            boolean deleted = userService.deleteUser(userId);
+            redirectAttributes.addFlashAttribute(deleted ? "success" : "error",
+                    deleted ? "Librarian deleted" : "Failed to delete librarian");
         } catch (Exception e) {
             logger.error("Failed to delete user {}", userId, e);
-            redirectAttributes.addFlashAttribute("error", "Failed to delete user");
+            redirectAttributes.addFlashAttribute("error", "Failed to delete librarian");
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Creates a new librarian account.
+     */
+    @PostMapping("/librarians")
+    public String addLibrarian(@RequestParam String username,
+                               @RequestParam String email,
+                               @RequestParam String password,
+                               @RequestParam(required = false) String phoneNumber,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            userService.register(username, email, password, User.Role.LIBRARIAN, phoneNumber);
+            redirectAttributes.addFlashAttribute("success", "Librarian created: " + username);
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (SQLException e) {
+            logger.error("Failed to create librarian", e);
+            redirectAttributes.addFlashAttribute("error", "System error. Please try again.");
         }
         return "redirect:/admin/users";
     }
