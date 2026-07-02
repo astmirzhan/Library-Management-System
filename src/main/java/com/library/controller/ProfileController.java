@@ -1,5 +1,6 @@
 package com.library.controller;
 
+import com.library.dto.ProfileForm;
 import com.library.model.User;
 import com.library.service.UserService;
 import org.apache.logging.log4j.LogManager;
@@ -7,13 +8,15 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 import java.sql.SQLException;
 import java.util.Optional;
 
@@ -47,20 +50,16 @@ public class ProfileController {
      * Keeps the existing password hash and role untouched.
      */
     @PostMapping("/update")
-    public String update(@RequestParam String username,
-                         @RequestParam String email,
-                         @RequestParam(required = false) String phoneNumber,
+    public String update(@Valid @ModelAttribute("profileForm") ProfileForm form,
+                         BindingResult bindingResult,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         User current = (User) session.getAttribute("currentUser");
 
-        if (phoneNumber != null && !phoneNumber.trim().isEmpty()) {
-            String phone = phoneNumber.trim();
-            if (!phone.matches("[0-9 +()-]{7,20}")) {
-                redirectAttributes.addFlashAttribute("error",
-                        "Invalid phone number: 7–20 characters, digits and + - ( ) space only");
-                return "redirect:/profile";
-            }
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("error",
+                    bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return "redirect:/profile";
         }
 
         try {
@@ -70,9 +69,9 @@ public class ProfileController {
                 return "redirect:/profile";
             }
             User user = opt.get();           // keeps current passwordHash & role
-            user.setUsername(username);
-            user.setEmail(email);
-            user.setPhoneNumber(phoneNumber);
+            user.setUsername(form.getUsername());
+            user.setEmail(form.getEmail());
+            user.setPhoneNumber(form.getPhoneNumber());
 
             userService.updateProfile(user);
             session.setAttribute("currentUser", user);   // refresh session so UI updates

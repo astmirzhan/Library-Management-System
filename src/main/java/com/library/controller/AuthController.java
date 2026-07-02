@@ -1,10 +1,21 @@
 package com.library.controller;
 
+import com.library.dto.RegisterForm;
 import com.library.model.User;
 import com.library.service.UserService;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+import javax.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +23,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -24,6 +37,8 @@ public class AuthController {
 
     private static final Logger logger = LogManager.getLogger(AuthController.class);
     private final UserService userService;
+    private final SecurityContextRepository securityContextRepository =
+            new HttpSessionSecurityContextRepository();
 
     @Autowired
     public AuthController(UserService userService) {
@@ -48,6 +63,7 @@ public class AuthController {
     public String login(@RequestParam String email,
                         @RequestParam String password,
                         HttpServletRequest request,
+                        HttpServletResponse response,
                         Model model) {
         try {
             Optional<User> userOpt = userService.authenticate(email, password);
@@ -59,6 +75,7 @@ public class AuthController {
                 }
                 HttpSession session = request.getSession(true);
                 session.setAttribute("currentUser", user);
+                establishSecurityContext(user, request, response);
                 logger.info("User logged in: {}", user.getEmail());
                 return redirectByRole(user.getRole());
             } else {
@@ -87,14 +104,18 @@ public class AuthController {
      * Processes registration form submission.
      */
     @PostMapping("/register")
-    public String register(@RequestParam String username,
-                           @RequestParam String email,
-                           @RequestParam String password,
-                           @RequestParam(required = false) String phoneNumber,
+    public String register(@Valid @ModelAttribute("registerForm") RegisterForm form,
+                           BindingResult bindingResult,
                            Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("error",
+                    bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return "register";
+        }
         try {
-            userService.register(username, email, password, User.Role.READER, phoneNumber);
-            logger.info("New user registered: {}", email);
+            userService.register(form.getUsername(), form.getEmail(), form.getPassword(),
+                    User.Role.READER, form.getPhoneNumber());
+            logger.info("New user registered: {}", form.getEmail());
             return "redirect:/login?registered=true";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
@@ -115,8 +136,27 @@ public class AuthController {
         if (user != null) {
             logger.info("User logged out: {}", user.getEmail());
         }
+        SecurityContextHolder.clearContext();
         session.invalidate();
         return "redirect:/login";
+    }
+
+    /**
+     * Populates the Spring Security context with the authenticated user's role
+     * (as ROLE_&lt;ROLE&gt;) and persists it to the session, so URL rules and
+     * {@code @PreAuthorize} annotations can enforce authorization on later requests.
+     */
+    private void establishSecurityContext(User user, HttpServletRequest request,
+                                          HttpServletResponse response) {
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        user.getEmail(), null,
+                        Collections.singletonList(
+                                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, request, response);
     }
 
     /**

@@ -30,11 +30,14 @@ import java.util.Locale;
  */
 @Configuration
 @EnableWebMvc
+@org.springframework.context.annotation.EnableAspectJAutoProxy
+@org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(basePackages = {
         "com.library.controller",
         "com.library.service",
         "com.library.dao",
-        "com.library.interceptor"
+        "com.library.interceptor",
+        "com.library.aspect"
 })
 public class WebConfig implements WebMvcConfigurer {
 

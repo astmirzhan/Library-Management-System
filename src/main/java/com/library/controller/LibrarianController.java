@@ -9,6 +9,7 @@ import com.library.service.BorrowService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -140,6 +141,7 @@ public class LibrarianController {
     /**
      * Creates a new book with the requested number of copies.
      */
+    @PreAuthorize("hasRole('LIBRARIAN')")
     @PostMapping("/books")
     public String createBook(@RequestParam String title,
                              @RequestParam String isbn,
@@ -201,6 +203,7 @@ public class LibrarianController {
     /**
      * Saves edits to an existing book.
      */
+    @PreAuthorize("hasRole('LIBRARIAN')")
     @PostMapping("/books/{bookId}/edit")
     public String editBook(@PathVariable int bookId,
                            @RequestParam String title,
@@ -230,6 +233,7 @@ public class LibrarianController {
     /**
      * Deletes a book (blocked if it has active borrows or any borrowing history).
      */
+    @PreAuthorize("hasRole('LIBRARIAN')")
     @PostMapping("/books/{bookId}/delete")
     public String deleteBook(@PathVariable int bookId, HttpSession session,
                              RedirectAttributes redirectAttributes) {
@@ -253,6 +257,7 @@ public class LibrarianController {
     /**
      * Adds more physical copies to an existing book.
      */
+    @PreAuthorize("hasRole('LIBRARIAN')")
     @PostMapping("/books/{bookId}/copies")
     public String addCopies(@PathVariable int bookId,
                             @RequestParam(defaultValue = "1") int count,
@@ -320,6 +325,7 @@ public class LibrarianController {
     /**
      * Approves a pending borrow request.
      */
+    @PreAuthorize("hasRole('LIBRARIAN')")
     @PostMapping("/borrows/approve/{borrowId}")
     public String approveBorrow(@PathVariable int borrowId,
                                 HttpSession session,
@@ -339,6 +345,7 @@ public class LibrarianController {
     /**
      * Rejects a pending borrow request.
      */
+    @PreAuthorize("hasRole('LIBRARIAN')")
     @PostMapping("/borrows/reject/{borrowId}")
     public String rejectBorrow(@PathVariable int borrowId,
                                HttpSession session,
@@ -362,6 +369,7 @@ public class LibrarianController {
     /**
      * Registers a return directly from the borrowing records page (records copy condition).
      */
+    @PreAuthorize("hasRole('LIBRARIAN')")
     @PostMapping("/borrows/return/{borrowId}")
     public String registerReturn(@PathVariable int borrowId,
                                  @RequestParam(defaultValue = "GOOD") String condition,

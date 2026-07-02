@@ -17,7 +17,9 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
-        return null;
+        // Spring Security config lives in the root context so the
+        // springSecurityFilterChain (DelegatingFilterProxy) can find it.
+        return new Class[]{SecurityConfig.class};
     }
 
     @Override
