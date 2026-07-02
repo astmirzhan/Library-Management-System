@@ -183,6 +183,52 @@ public class ReviewDAO implements BaseDAO<Review, Integer> {
         return 0.0;
     }
 
+    /**
+     * Checks whether the user has already reviewed the given book
+     * (the DB enforces this with a unique constraint uq_review_user_book).
+     *
+     * @param userId the user ID
+     * @param bookId the book ID
+     * @return true if a review already exists
+     * @throws SQLException if database error occurs
+     */
+    public boolean existsByUserAndBook(int userId, int bookId) throws SQLException {
+        String sql = "SELECT 1 FROM review WHERE user_id = ? AND book_id = ? LIMIT 1";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            logger.error("Failed to check existing review for user {} book {}", userId, bookId, e);
+            throw e;
+        }
+    }
+
+    /**
+     * Returns the total number of reviews in the system.
+     *
+     * @return review count
+     * @throws SQLException if database error occurs
+     */
+    public int count() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM review";
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            logger.error("Failed to count reviews", e);
+            throw e;
+        }
+        return 0;
+    }
+
     @Override
     public boolean update(Review review) throws SQLException {
         String sql = "UPDATE review SET rating = ?, comment = ? WHERE review_id = ?";

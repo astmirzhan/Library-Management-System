@@ -2,6 +2,7 @@ package com.library.service;
 
 import com.library.dao.BorrowRecordDAO;
 import com.library.dao.ReviewDAO;
+import com.library.dao.UserDAO;
 import com.library.model.Review;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,11 +26,13 @@ public class ReviewService {
 
     private final ReviewDAO reviewDAO;
     private final BorrowRecordDAO borrowDAO;
+    private final UserDAO userDAO;
 
     @Autowired
-    public ReviewService(ReviewDAO reviewDAO, BorrowRecordDAO borrowDAO) {
+    public ReviewService(ReviewDAO reviewDAO, BorrowRecordDAO borrowDAO, UserDAO userDAO) {
         this.reviewDAO = reviewDAO;
         this.borrowDAO = borrowDAO;
+        this.userDAO = userDAO;
     }
 
     /**
@@ -52,6 +55,10 @@ public class ReviewService {
         if (!hasUserBorrowedBook(userId, bookId)) {
             throw new IllegalStateException(
                     "You can only review books you have borrowed");
+        }
+
+        if (reviewDAO.existsByUserAndBook(userId, bookId)) {
+            throw new IllegalStateException("You have already reviewed this book");
         }
 
         Review review = new Review();
@@ -85,8 +92,19 @@ public class ReviewService {
      * @return list of reviews
      * @throws SQLException if database error occurs
      */
+    /**
+     * Total number of reviews in the system (for admin moderation overview).
+     */
+    public int getReviewCount() throws SQLException {
+        return reviewDAO.count();
+    }
+
     public List<Review> getReviewsForBook(int bookId) throws SQLException {
-        return reviewDAO.findByBookId(bookId);
+        List<Review> reviews = reviewDAO.findByBookId(bookId);
+        for (Review review : reviews) {
+            userDAO.findById(review.getUserId()).ifPresent(review::setUser);
+        }
+        return reviews;
     }
 
     /**

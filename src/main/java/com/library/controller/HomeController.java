@@ -26,7 +26,7 @@ public class HomeController {
                 return "redirect:/librarian/dashboard";
             case READER:
             default:
-                return "redirect:/catalog";
+                return "redirect:/discover";
         }
     }
 }
