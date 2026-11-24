@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400">
+  <rect width="1280" height="400" rx="28" fill="#285c46"/>
+  <g font-family="Georgia, 'Times New Roman', serif" fill="#f5f3ed">
+    <text x="72" y="150" font-size="64" font-weight="700">Library</text>
+    <text x="72" y="218" font-size="64" font-weight="700">Management System</text>
+  </g>
+  <g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="74" y="270" font-size="24" fill="#f5f3ed" opacity=".88">Catalog, borrowing and reviews for readers, librarians and admins</text>
+    <text x="74" y="312" font-size="20" fill="#e9a23b">Spring MVC · plain JDBC · PostgreSQL · Spring Security</text>
+  </g>
+  <g transform="translate(940 90)">
+    <rect x="0" y="40" width="44" height="190" rx="6" fill="#e9a23b"/>
+    <rect x="52" y="10" width="40" height="220" rx="6" fill="#fffdf8"/>
+    <rect x="100" y="60" width="48" height="170" rx="6" fill="#183d2e" stroke="#f5f3ed" stroke-width="3"/>
+    <rect x="156" y="25" width="38" height="205" rx="6" fill="#deddd5"/>
+    <rect x="202" y="70" width="46" height="160" rx="6" fill="#e9a23b" opacity=".75"/>
+    <rect x="-20" y="230" width="290" height="10" rx="5" fill="#f5f3ed"/>
+    <rect x="62" y="40" width="20" height="4" rx="2" fill="#285c46"/><rect x="62" y="52" width="20" height="4" rx="2" fill="#285c46"/>
+  </g>
+</svg>

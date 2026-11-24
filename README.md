@@ -1,123 +1,152 @@
+<div align="center">
+
+<img src="docs/banner.svg" alt="Library Management System: catalog, borrowing and reviews for readers, librarians and admins" width="100%" />
+
 # Library Management System
 
-## 📖 Overview
+**A full-stack library web app with three roles: readers borrow and review books, librarians run the inventory and loans, admins see the numbers. Built on Spring MVC and plain JDBC, no Spring Boot, no ORM.**
 
-A web application for managing a library's catalog and borrowing workflow, built with **Spring MVC (without Spring Boot)** and **plain JDBC** (no ORM). It serves three roles:
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-11-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 11" />
+  <img src="https://img.shields.io/badge/Spring_MVC-5-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring MVC 5" />
+  <img src="https://img.shields.io/badge/Spring_Security-BCrypt_·_CSRF-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security" />
+  <img src="https://img.shields.io/badge/PostgreSQL-plain_JDBC-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL with plain JDBC" />
+  <img src="https://img.shields.io/badge/Thymeleaf-EN_·_RU-005F0F?style=for-the-badge&logo=thymeleaf&logoColor=white" alt="Thymeleaf, English and Russian" />
+  <img src="https://img.shields.io/badge/Tests-JUnit_5_·_Mockito-25A162?style=for-the-badge&logo=junit5&logoColor=white" alt="JUnit 5 and Mockito" />
+</p>
 
-- **Readers** — browse the catalog, filter/search, borrow books (with a self-chosen due date), track loans, write and edit reviews.
-- **Librarians** — manage the book inventory (add/edit/delete books and copies), approve/reject borrow requests, register returns with copy condition, track overdue loans.
-- **Admins** — analytics dashboard, manage librarian accounts, view-only access to the catalog.
+</div>
 
-## 🛠 Tech Stack
+---
 
-| Layer          | Technology                                                                 |
-|----------------|----------------------------------------------------------------------------|
-| Language       | Java 11                                                                    |
-| Web            | Spring MVC 5 (Spring Core IoC/DI, DispatcherServlet)                        |
-| Security       | Spring Security 5 (role-based URL rules + `@PreAuthorize`, CSRF), BCrypt    |
-| Persistence    | Plain JDBC (no ORM), PostgreSQL, **custom thread-safe connection pool**     |
-| AOP            | Spring AOP / AspectJ (`LoggingAspect`)                                      |
-| View           | Thymeleaf + custom CSS + Bootstrap grid (responsive)                       |
-| Validation     | Spring Validation (`@Valid`, JSR-303) + HTML5 client-side                  |
-| Logging        | Log4j2 (console + rolling file)                                            |
-| i18n           | Spring MessageSource + LocaleChangeInterceptor (EN / RU, in-app switcher)  |
-| Testing        | JUnit 5 + Mockito + JaCoCo                                                 |
-| Build / Runtime| Maven (WAR) → Tomcat 9 via Cargo Maven plugin                              |
+## 📚 What it is
+
+A web app that covers the whole life of a library book: in the catalog, requested, approved, returned (with its
+condition checked) and reviewed. Each role sees only what it needs.
+
+| Role | What they can do |
+| --- | --- |
+| 📖 **Reader** | Search and filter the catalog, request a book with their own due date, track loans, write and edit reviews for books they borrowed |
+| 🗂️ **Librarian** | Add, edit and delete books and copies, approve or reject requests, register returns with copy condition, track overdue loans |
+| 📊 **Admin** | Analytics dashboard, manage librarian accounts, view-only catalog |
 
 ## ✨ Features
 
-- Book catalog with **search** (title / author / ISBN), **genre / author / availability filters**, and **pagination**
-- Borrowing lifecycle: **request (reader-chosen due date) → librarian approval → return confirmation (copy condition) → overdue fine**
-- Librarian can **reject** requests (order → `REJECTED`) and manage inventory (add/edit/delete books, add copies)
-- Book reviews and average ratings (create + edit; only for books you borrowed)
-- **Role-based access** enforced by both Spring Security and a Spring `AuthInterceptor`
-- **Internationalization** (English / Russian) with an in-app language switcher (`?lang=en|ru`)
-- **CSRF protection** on all state-changing forms
-- Session-based authentication integrated with the Spring Security context; passwords hashed with **BCrypt**
+- **🔎 Catalog**: search by title, author or ISBN; filter by genre, author and availability; pagination everywhere.
+- **🔁 Borrowing**: up to 5 active loans, 14 days by default and never more than 60; overdue fines per day.
+- **⭐ Reviews and ratings**: only readers who actually borrowed a book can review it.
+- **🌐 English and Russian**: in-app language switcher (`?lang=en|ru`).
+- **🔒 Security**: role-based URLs plus method-level `@PreAuthorize`, CSRF on every form, BCrypt passwords.
+- **🧯 Friendly errors**: one `@ControllerAdvice` turns exceptions into a readable error page.
 
-## 📁 Package Structure
+## 🔁 A book's journey
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#fffdf8", "primaryTextColor": "#17231d", "primaryBorderColor": "#285c46", "lineColor": "#285c46", "secondaryColor": "#f5f3ed", "tertiaryColor": "#fdf0da", "fontFamily": "monospace"}}}%%
+stateDiagram-v2
+  direction LR
+  [*] --> Requested: reader picks a due date
+  Requested --> Rejected: librarian rejects
+  Requested --> Borrowed: librarian approves
+  Borrowed --> Overdue: due date passes
+  Borrowed --> Returned: librarian confirms return
+  Overdue --> Returned: return + daily fine
+  Returned --> Reviewed: reader leaves a review
+  Rejected --> [*]
+  Reviewed --> [*]
+```
+
+## 🏗️ How it's built
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#fffdf8", "primaryTextColor": "#17231d", "primaryBorderColor": "#285c46", "lineColor": "#285c46", "secondaryColor": "#e9a23b", "tertiaryColor": "#f5f3ed", "fontFamily": "monospace"}}}%%
+flowchart LR
+  B["🌐 Browser<br/>Thymeleaf pages"] --> SEC["🔒 Spring Security<br/>roles · CSRF"]
+  SEC --> INT["AuthInterceptor<br/>LoggingInterceptor"]
+  INT --> C["@Controller"]
+  C --> S["@Service<br/>business rules"]
+  S --> D["@Repository DAO<br/>PreparedStatement"]
+  D --> POOL["Custom connection pool<br/>2 BlockingQueues"]
+  POOL --> DB[("🐘 PostgreSQL<br/>10 tables · 3NF")]
+  AOP["LoggingAspect<br/>AOP"] -.-> S
+```
+
+| Layer | Technology |
+| --- | --- |
+| Language | Java 11 |
+| Web | Spring MVC 5, DispatcherServlet configured in code (`AppInitializer`) |
+| Security | Spring Security 5, BCrypt, CSRF, `@PreAuthorize` |
+| Persistence | Plain JDBC with `PreparedStatement`, PostgreSQL, custom thread-safe connection pool |
+| Cross-cutting | Spring AOP (`LoggingAspect`), interceptors, Log4j2 (console + rolling file) |
+| View | Thymeleaf, custom CSS, Bootstrap grid |
+| Validation | JSR-303 DTOs with `@Valid`, plus HTML5 checks |
+| Build and run | Maven (WAR) → Tomcat 9 via the Cargo plugin |
+
+**Design patterns**: DAO (`BaseDAO<T, ID>` + one interface per entity), Singleton (`DatabaseConnection`,
+`ConfigLoader`), Decorator (`PooledConnection.close()` returns the connection to the pool instead of closing it).
+Every layer is an interface plus an implementation: Controller → Service → DAO → Database.
+
+<details>
+<summary><b>📁 Package structure</b></summary>
 
 ```
 com.library
-├── aspect        # LoggingAspect (@Aspect — AOP logging of service calls)
-├── config        # WebConfig, AppInitializer, SecurityConfig, SecurityWebInitializer,
-│                 #   DatabaseConnection (Singleton), ConnectionPool (custom pool)
-├── controller    # @Controller endpoints + GlobalExceptionHandler (@ControllerAdvice)
-├── dto           # Form DTOs with JSR-303 validation (RegisterForm, ProfileForm)
-├── interceptor   # AuthInterceptor, LoggingInterceptor
-├── model         # POJO entities (User, Book, BookCopy, BorrowRecord, ...)
-├── util          # ConfigLoader (Singleton), PasswordUtil (BCrypt)
-├── dao           # DAO interfaces (BaseDAO<T,ID> + one interface per entity)
-│   └── impl      # @Repository JDBC implementations
-└── service       # Service interfaces (User, Book, Borrow, Review)
-    └── impl       # @Service implementations
+├── aspect        LoggingAspect
+├── config        WebConfig, AppInitializer, SecurityConfig, SecurityWebInitializer,
+│                 DatabaseConnection, ConnectionPool
+├── controller    @Controller endpoints + GlobalExceptionHandler
+├── dto           RegisterForm, ProfileForm (JSR-303)
+├── interceptor   AuthInterceptor, LoggingInterceptor
+├── model         User, Book, BookCopy, BorrowRecord, Review, Author, Genre, Publisher
+├── util          ConfigLoader, PasswordUtil (BCrypt)
+├── dao           BaseDAO<T,ID> + interfaces
+│   └── impl      JDBC implementations
+└── service       User, Book, Borrow, Review services
+    └── impl
 ```
 
-## 🗄 Database
+</details>
 
-PostgreSQL, **10 tables** in 3NF with foreign keys throughout:
+## 🗄️ Database
 
-- Core: `user`, `book`, `book_copy`, `borrow_record`, `review`, `author`, `genre`, `publisher`
-- Junction (many-to-many): `book_author`, `book_genre`
+PostgreSQL, **10 tables in 3NF** with foreign keys throughout.
 
-Enum types: `user_role`, `borrow_status`, `copy_condition`.
+| Group | Tables |
+| --- | --- |
+| Core | `user`, `book`, `book_copy`, `borrow_record`, `review`, `author`, `genre`, `publisher` |
+| Many-to-many | `book_author`, `book_genre` |
+| Enum types | `user_role`, `borrow_status`, `copy_condition` |
 
-## 🚀 Getting Started
+## ✅ Tests
 
-### Prerequisites
+**82 tests** with JUnit 5 and Mockito across the service layer (books, borrowing, reviews) and the DAO layer,
+with a JaCoCo coverage report. Coverage is above 50% on both the service and DAO layers.
 
-- JDK 11+
-- Maven 3.6+
-- PostgreSQL 12+ (running locally on port 5432)
+## 🛠️ Run it
 
-### Database setup
-
-A PostgreSQL database is expected on `localhost:5432`. Connection settings (URL, user, password) and the
-connection-pool size live in `src/main/resources/application.properties`.
-
-### Build & Run
+You need JDK 11+, Maven 3.6+ and PostgreSQL 12+ on `localhost:5432`. Connection settings, the pool size and the
+borrowing rules live in `src/main/resources/application.properties`.
 
 ```bash
-mvn clean package        # compiles, runs tests, builds target/library-management.war
-mvn test                 # run unit tests
-mvn jacoco:report        # coverage report → target/site/jacoco/index.html
-mvn cargo:run            # downloads Tomcat 9 and deploys the app
+mvn clean package     # compile, test, build target/library-management.war
+mvn test              # unit tests
+mvn jacoco:report     # coverage → target/site/jacoco/index.html
+mvn cargo:run         # download Tomcat 9 and deploy
 ```
 
-Then open **http://localhost:8080/** and sign in.
+Then open **http://localhost:8080/** and sign in with a demo account:
 
-> Note: the app runs on **Tomcat 9** (Servlet 3.1+). Tomcat 7 is not supported — Spring 5's static-resource handler
-> requires `HttpServletResponse.setContentLengthLong()`, which only exists in Servlet 3.1+.
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@lib.org` | `admin123` |
+| Librarian | `jane@lib.org` | `librarian123` |
+| Reader | `alice@mail.com` | `reader123` |
 
-## 👤 Demo Accounts
+> Demo credentials are committed on purpose for local evaluation; this is an educational project with no production database.
+> The app needs **Tomcat 9** (Servlet 3.1+): Spring 5's static resource handler calls `setContentLengthLong()`, which Tomcat 7 lacks.
 
-| Role      | Email            | Password       |
-|-----------|------------------|----------------|
-| Admin     | `admin@lib.org`  | `admin123`     |
-| Librarian | `jane@lib.org`   | `librarian123` |
-| Reader    | `alice@mail.com` | `reader123`    |
+<div align="center">
 
-> Demo credentials are intentionally committed for local evaluation only — this is an educational project with no
-> production database.
+**Library Management System** · MIT · every book comes back 📚
 
-## ✅ Implemented Requirements
-
-- **Spring MVC** controllers (`@Controller`, `@RequestMapping`) + `DispatcherServlet` via `AppInitializer`
-- **Layered architecture**: Controller → Service → DAO → Database, each layer as **interface + implementation**
-- **DAO pattern**: `BaseDAO<T, ID>` + per-entity interfaces with `@Repository` JDBC implementations (`dao.impl`)
-- **Design patterns**: DAO, Singleton (`DatabaseConnection`, `ConfigLoader`), **Decorator** (`PooledConnection` in the connection pool)
-- **Custom thread-safe connection pool** (two `BlockingQueue`s; `PooledConnection.close()` returns the connection to the pool)
-- **Plain JDBC** with `PreparedStatement` everywhere (SQL-injection safe)
-- **Spring Security**: role-based URL access (`/admin/**` → ADMIN, `/librarian/**` → LIBRARIAN/ADMIN) + method-level `@PreAuthorize`
-- **CSRF protection** enabled; tokens auto-injected into all Thymeleaf forms
-- **Password hashing** with BCrypt (`PasswordUtil` / jBCrypt)
-- **AOP**: `LoggingAspect` logs service-layer calls, timing and exceptions
-- **Spring Interceptors**: `AuthInterceptor` (session/role checks) + `LoggingInterceptor`
-- **Validation**: server-side **Spring Validation** (`@Valid` DTOs with `@NotBlank`/`@Email`/`@Size`) + HTML5 client-side
-- **Pagination** for catalog, users and borrowing records
-- **i18n**: English / Russian message bundles with an in-app language switcher
-- **Unit tests**: JUnit 5 + Mockito, **> 50% coverage** on both the Service and DAO layers; **JaCoCo** report
-- **Global exception handling** via `@ControllerAdvice` with a user-friendly error page
-- **Logging** with Log4j2 across all layers (console + rolling file)
-- **Configuration** externalized in `application.properties` (DB, connection pool, business rules: borrowing limit, borrow period, fines, pagination)
-- **JavaDoc** on public Service and DAO methods
+</div>
