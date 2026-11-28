@@ -30,6 +30,10 @@ condition checked) and reviewed. Each role sees only what it needs.
 | 🗂️ **Librarian** | Add, edit and delete books and copies, approve or reject requests, register returns with copy condition, track overdue loans |
 | 📊 **Admin** | Analytics dashboard, manage librarian accounts, view-only catalog |
 
+## 📸 Screenshots
+
+<img src="docs/readme/screens.png" alt="Reader discover page and catalog, librarian dashboard, admin dashboard" width="100%" />
+
 ## ✨ Features
 
 - **🔎 Catalog**: search by title, author or ISBN; filter by genre, author and availability; pagination everywhere.
